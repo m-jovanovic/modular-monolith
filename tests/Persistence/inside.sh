@@ -5,6 +5,28 @@ export PGHOST="${PGHOST:-127.0.0.1}" PGUSER=postgres PGPASSWORD=fixture-only
 export CATALOG_PASSWORD=catalog-fixture LENDING_PASSWORD=lending-fixture PICKUP_PASSWORD=pickup-fixture
 createdb equipment_upgrade
 createdb equipment_empty
+createdb equipment_peer
+createdb equipment_same
+
+# The cluster has no module roles yet. Start independent clients before waiting for either.
+test "$(PGDATABASE=postgres psql -XAtq -c "SELECT count(*) FROM pg_roles WHERE rolname IN ('catalog_app','catalog_owner','lending_app','lending_owner','pickup_desk_app','pickup_desk_owner')")" = 0
+run_pair() {
+    PGDATABASE="$1" ./infra/postgres/migrate.sh >/dev/null &
+    first=$!
+    PGDATABASE="$2" ./infra/postgres/migrate.sh >/dev/null &
+    second=$!
+    status=0
+    wait "$first" || status=1
+    wait "$second" || status=1
+    test "$status" = 0
+}
+run_pair equipment_empty equipment_peer
+run_pair equipment_same equipment_same
+expected=$(find src/Modules -path '*/Migrations/[0-9]*.sql' -type f | wc -l | tr -d ' ')
+for database in equipment_empty equipment_peer equipment_same; do
+    test "$(PGDATABASE="$database" psql -XAtq -c 'SELECT count(*) FROM library_meta.migrations')" = "$expected"
+done
+echo "Concurrent initializers applied $expected scripts per database across fresh databases and on the same empty database."
 
 # The first migration in each module is the oldest database shape supported by this reference.
 prior=$(mktemp -d)
@@ -25,11 +47,7 @@ INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload)
 VALUES ('migration-fixture', '4892f78a-d909-4a67-944a-4bdad8b9a003', '{}');
 SQL
 
-# Roles now exist cluster-wide. Separate databases exercise independent migration ledgers concurrently.
-PGDATABASE=equipment_empty ./infra/postgres/migrate.sh >/dev/null &
-empty_pid=$!
 ./infra/postgres/migrate.sh >/dev/null
-wait "$empty_pid"
 ./infra/postgres/migrate.sh >/dev/null
 
 one() { test "$(psql -XAtq -v ON_ERROR_STOP=1 -c "$1")" = 1; }
