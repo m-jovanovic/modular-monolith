@@ -2,12 +2,14 @@ using EquipmentLibrary.Lending.Application.Maintenance;
 using EquipmentLibrary.Lending.Maintenance;
 using EquipmentLibrary.Lending.Application.Holds.PlaceHold;
 using EquipmentLibrary.Lending.Copies;
+using EquipmentLibrary.Lending.Delivery;
 using EquipmentLibrary.Lending.Holds.Expiry;
 using EquipmentLibrary.Lending.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace EquipmentLibrary.Lending;
 
@@ -15,6 +17,7 @@ public static class LendingModule
 {
     public static IServiceCollection AddLending(this IServiceCollection services, bool runExpiryWorker = true)
     {
+        services.TryAddSingleton<HoldSubscriptions>();
         services.AddScoped<LendingContext>();
         services.AddScoped<IMaintenanceOrders, PostgresMaintenanceOrders>();
         services.AddScoped<MaintenanceOrderHandler>();

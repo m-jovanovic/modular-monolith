@@ -71,7 +71,7 @@ internal static class CloseHold
         }
 
         string eventType = isCollection ? HoldLifecycleEvent.Collected : HoldLifecycleEvent.Cancelled;
-        await HoldEvents.RecordAsync(connection, snapshot, eventType, 2, now, cancellationToken);
+        await HoldEvents.RecordAsync(connection, lending.Subscriptions, snapshot, eventType, 2, now, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Results.Ok(new HoldView(holdId, snapshot.CopyId, snapshot.State, hold.PickupWindow.Deadline, Expired: false));
     }

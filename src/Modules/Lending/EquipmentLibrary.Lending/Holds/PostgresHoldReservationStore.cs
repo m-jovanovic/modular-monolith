@@ -34,7 +34,7 @@ internal sealed class PostgresHoldReservationStore(LendingContext context) : IHo
             """, holdId, command.CopyId, command.BorrowerId, placedAt);
         var storedAt = (DateTime)(await insert.ExecuteScalarAsync(cancellationToken))!;
         var window = new HoldPickupWindow(storedAt);
-        await HoldEvents.RecordAsync(connection, snapshot, HoldLifecycleEvent.Placed, 1, placedAt, cancellationToken);
+        await HoldEvents.RecordAsync(connection, context.Subscriptions, snapshot, HoldLifecycleEvent.Placed, 1, placedAt, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlaceHoldResult.Placed(holdId, command.CopyId, window);
     }

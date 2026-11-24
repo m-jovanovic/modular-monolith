@@ -101,6 +101,7 @@
         "dependencies": {
           "EquipmentLibrary.Catalog.Contracts": "[1.0.0, )",
           "EquipmentLibrary.Lending.Application": "[1.0.0, )",
+          "EquipmentLibrary.Lending.Delivery": "[1.0.0, )",
           "EquipmentLibrary.Lending.Domain": "[1.0.0, )",
           "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
           "Npgsql": "[11.0.0, )"
