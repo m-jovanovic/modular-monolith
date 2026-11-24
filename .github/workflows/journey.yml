@@ -27,6 +27,8 @@ jobs:
           diff -u docs/use-cases.md "$RUNNER_TEMP/use-cases.md"
       - name: Race two borrowers and complete the staff workflow
         run: python3 tests/Journeys/borrow_a_drill.py
+      - name: Trace an HTTP reservation through both module transactions
+        run: python3 tests/Journeys/trace_hold.py
       - name: Kill the host after durable receipt and verify recovery
         run: python3 tests/Journeys/recover_delivery.py
       - name: Restore the pickup projection from a full PostgreSQL backup

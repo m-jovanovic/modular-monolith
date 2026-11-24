@@ -42,6 +42,7 @@ jobs:
       - run: ./scripts/verify.sh
       - run: ./scripts/check-analyzers.sh
       - run: python3 tests/Journeys/borrow_a_drill.py
+      - run: python3 tests/Journeys/trace_hold.py
       - run: python3 tests/Journeys/recover_delivery.py
       - run: python3 tests/Journeys/restore_pickup.py
       - run: ./tests/Persistence/verify.sh
