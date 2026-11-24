@@ -11,6 +11,39 @@ public sealed class CatalogCategoryTests(CatalogFixture app)
     private const string Categories = "/api/catalog/categories";
 
     [Fact]
+    public async Task ClassificationsAreRepeatableAndConstrainPublicSearch()
+    {
+        using HttpResponseMessage created = await app.Staff.PostAsJsonAsync(Categories, new { name = $"Power tools {Guid.NewGuid():N}" });
+        JsonElement category = await created.Content.ReadFromJsonAsync<JsonElement>();
+        Guid categoryId = category.GetProperty("id").GetGuid();
+        using HttpResponseMessage item = await app.Staff.PostAsJsonAsync("/api/catalog/items", new { title = "Angle grinder", description = "115 mm disc." });
+        string location = item.Headers.Location!.ToString();
+        string membership = $"{location}/categories/{categoryId}";
+
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            using HttpResponseMessage assigned = await app.Staff.PutAsync(membership, null);
+            Assert.Equal(HttpStatusCode.NoContent, assigned.StatusCode);
+        }
+
+        JsonElement classifications = await app.Public.GetFromJsonAsync<JsonElement>(location + "/categories");
+        Assert.Equal(categoryId, Assert.Single(classifications.EnumerateArray()).GetProperty("id").GetGuid());
+        string search = $"/api/catalog/items?categoryId={categoryId}";
+        JsonElement matches = await app.Public.GetFromJsonAsync<JsonElement>(search);
+        Assert.Equal("Angle grinder", Assert.Single(matches.EnumerateArray()).GetProperty("title").GetString());
+        using HttpResponseMessage removed = await app.Staff.DeleteAsync(membership);
+        Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        using HttpResponseMessage repeated = await app.Staff.DeleteAsync(membership);
+        Assert.Equal(HttpStatusCode.NoContent, repeated.StatusCode);
+        Assert.Empty((await app.Public.GetFromJsonAsync<JsonElement>(search)).EnumerateArray());
+        Assert.Empty((await app.Public.GetFromJsonAsync<JsonElement>(location + "/categories")).EnumerateArray());
+        using HttpResponseMessage missingItem = await app.Public.GetAsync($"/api/catalog/items/{Guid.NewGuid()}/categories");
+        Assert.Equal(HttpStatusCode.NotFound, missingItem.StatusCode);
+        using HttpResponseMessage unknown = await app.Staff.PutAsync($"{location}/categories/{Guid.NewGuid()}", null);
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+    }
+
+    [Fact]
     public async Task ConcurrentCaseVariantsProduceOneCategory()
     {
         string name = $"Woodworking {Guid.NewGuid():N}";

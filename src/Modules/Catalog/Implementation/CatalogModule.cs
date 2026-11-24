@@ -18,6 +18,8 @@ public static class CatalogModule
         services.AddScoped<ChangeItemPublication.Handler>();
         services.AddScoped<CreateCategory.Handler>();
         services.AddScoped<BrowseCategories.Handler>();
+        services.AddScoped<ClassifyItem.Handler>();
+        services.AddScoped<GetItemCategories.Handler>();
         return services;
     }
 
@@ -32,6 +34,8 @@ public static class CatalogModule
         RouteGroupBuilder categories = endpoints.MapGroup("/api/catalog/categories");
         CreateCategory.MapEndpoint(categories);
         BrowseCategories.MapEndpoints(categories);
+        ClassifyItem.MapEndpoints(items);
+        GetItemCategories.MapEndpoint(items);
         return endpoints;
     }
 }
