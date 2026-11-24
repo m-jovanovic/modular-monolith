@@ -22,6 +22,7 @@ public static class LendingModule
         lending.MapGet("/copies/{copyId:guid}", GetCopy.HandleAsync);
         lending.MapGet("/copies", FindCopies.HandleAsync);
         lending.MapGet("/availability/{catalogItemId:guid}", GetAvailability.HandleAsync);
+        lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower");
         return endpoints;
     }
 }
