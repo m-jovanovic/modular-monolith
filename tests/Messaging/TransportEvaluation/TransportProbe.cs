@@ -46,6 +46,36 @@ internal static class TransportProbe
         {
             throw new InvalidOperationException("A denied listener applied a pickup.");
         }
+
+        await DeliverUsingSharedQueueGrantAsync(db);
+    }
+
+    private static async Task DeliverUsingSharedQueueGrantAsync(ProbeDatabase db)
+    {
+        await ProbeDatabase.ExecuteAsync(db.Admin, $"""
+            GRANT USAGE ON SCHEMA lending TO {db.PickupRole};
+            GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE lending.wolverine_queue_handoff,
+                lending.wolverine_queue_handoff_scheduled TO {db.PickupRole};
+            """);
+        using IHost sender = BuildHost(db.Lending, provision: false);
+        using IHost receiver = BuildHost(db.Pickup, provision: false, receiver: true);
+        await sender.StartAsync();
+        await receiver.StartAsync();
+        try
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            while (await ProbeDatabase.CountAsync(db.Pickup, "SELECT count(*) FROM pickup_desk.projected_holds") != 1)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(250), deadline.Token);
+            }
+
+            Console.WriteLine("Restarted the sender and delivered one hold after granting PickupDesk access to the transport tables.");
+        }
+        finally
+        {
+            await receiver.StopAsync();
+            await sender.StopAsync();
+        }
     }
 
     private static async Task ExpectReceiverDenialAsync(ProbeDatabase db)
