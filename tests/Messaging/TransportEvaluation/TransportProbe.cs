@@ -69,7 +69,18 @@ internal static class TransportProbe
                 await Task.Delay(TimeSpan.FromMilliseconds(250), deadline.Token);
             }
 
-            Console.WriteLine("Restarted the sender and delivered one hold after granting PickupDesk access to the transport tables.");
+            long matching = await ProbeDatabase.CountAsync(db.Admin,
+                "SELECT count(*) FROM lending.holds h JOIN pickup_desk.projected_holds p USING (id)");
+            if (matching != 1) throw new InvalidOperationException("The projected hold ID differs from Lending's hold.");
+            try
+            {
+                await ProbeDatabase.CountAsync(db.Pickup, "SELECT count(*) FROM lending.holds");
+                throw new InvalidOperationException("The extra queue grant exposed Lending business rows.");
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.InsufficientPrivilege)
+            {
+                Console.WriteLine("Restart delivered the same hold ID. PickupDesk still cannot read lending.holds.");
+            }
         }
         finally
         {
