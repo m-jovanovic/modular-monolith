@@ -7,7 +7,11 @@ internal static class CreateItem
     internal sealed record Request(string? Title, string? Description);
 
     internal static void MapEndpoint(RouteGroupBuilder items) =>
-        items.MapPost("/", Execute).WithName("CreateItem").RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapPost("/", Execute)
+            .WithName("CreateItem")
+            .RequireAuthorization(CatalogModule.ManagePolicy)
+            .Produces<CatalogItemDescription>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
     private static async Task<IResult> Execute(Request request, Handler handler, CancellationToken cancellationToken)
     {
