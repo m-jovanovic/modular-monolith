@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using EquipmentLibrary.Lending.Persistence;
@@ -13,9 +14,10 @@ internal static class HoldEvents
     {
         var message = new HoldLifecycleEvent(Guid.CreateVersion7(), eventType, 1, sequence, occurredAt, snapshot);
         string json = Encoding.UTF8.GetString(HoldEventWire.Write(message));
+        string? traceParent = Activity.Current is { IdFormat: ActivityIdFormat.W3C } activity ? activity.Id : null;
         await using NpgsqlCommand insert = connection.Sql("""
-            INSERT INTO lending.outbox (id, payload, occurred_at) VALUES ($1, $2::jsonb, $3)
-            """, message.MessageId, json, occurredAt);
+            INSERT INTO lending.outbox (id, payload, occurred_at, trace_parent) VALUES ($1, $2::jsonb, $3, NULLIF($4, ''))
+            """, message.MessageId, json, occurredAt, traceParent ?? string.Empty);
         await insert.ExecuteNonQueryAsync(cancellationToken);
     }
 }
