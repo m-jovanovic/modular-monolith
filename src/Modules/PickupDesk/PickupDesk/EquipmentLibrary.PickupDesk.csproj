@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <InternalsVisibleTo Include="EquipmentLibrary.PickupDesk.Tests" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Npgsql" />
     <ProjectReference Include="../Contracts/EquipmentLibrary.PickupDesk.Contracts.csproj" />
