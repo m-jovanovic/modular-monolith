@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="836" height="252" viewBox="0 0 836 252" role="img" aria-labelledby="title desc">
+<title id="title">One copy, one winning hold</title><desc id="desc">A conditional write, the hold and its outgoing event share one Lending transaction.</desc>
+<style>text{font-family:system-ui,sans-serif;fill:#163c36}.bg{fill:#f8faf7}.card{stroke:#426b61;stroke-width:1.5}.edge{stroke:#275a50;stroke-width:2;fill:none}.arrow{fill:#275a50}.head{font-size:26px;font-weight:700}.name{font-size:18px;font-weight:700}.body{font-size:13px}.link{font-size:12px;font-weight:600}.a{fill:#d9ebdf}.b{fill:#f4e4c9}.c{fill:#dce9f1}@media(prefers-color-scheme:dark){text{fill:#eef6f2}.bg{fill:#16312e}.a{fill:#2d5146}.b{fill:#534735}.c{fill:#334957}.card{stroke:#95b8aa}.edge{stroke:#c1d9c7}.arrow{fill:#c1d9c7}}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" width="836" height="252" rx="14"/>
+<text class="head" x="24" y="44">One copy, one winning hold</text>
+<text class="body" x="24" y="74">A conditional write, the hold and its outgoing event share one Lending transaction.</text>
+<g id="borrower"><rect class="card a" x="24" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="36" y="142">Borrower</text>
+<text class="body" x="36" y="174">Request the copy</text>
+<text class="body" x="36" y="197">Two requests can race</text></g>
+<g id="lending"><rect class="card b" x="312" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="324" y="142">Lending</text>
+<text class="body" x="324" y="174">Claim an available copy</text>
+<text class="body" x="324" y="197">A losing request gets 409</text></g>
+<g id="postgres"><rect class="card c" x="600" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="612" y="142">PostgreSQL</text>
+<text class="body" x="612" y="174">Commit the winning hold</text>
+<text class="body" x="612" y="197">Outbox row commits with it</text></g>
+<g id="reserve-request"><path class="edge" d="M234 169 H307" marker-end="url(#arrowhead)"/>
+<text class="link" text-anchor="middle" x="270.5" y="154">reserve</text></g>
+<g id="commit-hold"><path class="edge" d="M522 169 H595" marker-end="url(#arrowhead)"/>
+<text class="link" text-anchor="middle" x="558.5" y="154">commit</text></g>
+</svg>
