@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="770" viewBox="0 0 360 770" role="img" aria-labelledby="title desc">
+<title id="title">One copy, one winning hold</title><desc id="desc">Two members request one copy. A conditional write claims availability. The hold and its outgoing fact commit together inside one PostgreSQL transaction.</desc>
+<style>text{font-family:Barlow,system-ui,sans-serif}.title{font-size:23px;font-weight:700}.name{font-size:20px;font-weight:700}.body{font-size:15px}.cap,.edge-label{font-size:14px;font-weight:700}.conn{fill:none;stroke-width:2}.card,.frame{stroke-width:1.3}.bg{fill:#172c2a}text{fill:#f0f7f2}.muted{fill:#b4cbc1}.frame{fill:#1e3531;stroke:#b5d7c8}.a{fill:#2c5144}.b{fill:#534331}.c{fill:#314957}.card,.conn{stroke:#b5d7c8}.arrow{fill:#b5d7c8}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="770" rx="12"/>
+<text class="title" text-anchor="start" x="22" y="40">One copy, one winning hold</text>
+<text class="body muted" text-anchor="start" x="22" y="69">A conditional write, the hold and its</text>
+<text class="body muted" text-anchor="start" x="22" y="88">outgoing event share one Lending</text>
+<text class="body muted" text-anchor="start" x="22" y="107">transaction.</text>
+<rect class="frame" x="14" y="294" width="332" height="308" rx="12"/>
+<text class="cap" text-anchor="start" x="30" y="317">One Lending transaction</text>
+<g id="borrower">
+<rect class="card a" x="38" y="170" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="199">Borrower</text>
+<text class="body" text-anchor="start" x="51" y="225">Request the copy</text>
+<text class="body muted" text-anchor="start" x="51" y="247">Two requests can race</text>
+</g>
+<g id="lending">
+<rect class="card b" x="38" y="327" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="356">Lending</text>
+<text class="body" text-anchor="start" x="51" y="382">Claim an available copy</text>
+<text class="body muted" text-anchor="start" x="51" y="404">A losing request gets 409</text>
+</g>
+<g id="postgres">
+<rect class="card c" x="38" y="484" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="513">PostgreSQL</text>
+<text class="body" text-anchor="start" x="51" y="539">Commit the winning hold</text>
+<text class="body muted" text-anchor="start" x="51" y="561">Outbox row commits with it</text>
+</g>
+<g id="reserve-request"><path d="M180 269 V322" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="299">reserve</text>
+</g>
+<g id="commit-hold"><path d="M180 426 V479" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="456">commit</text>
+</g>
+<rect class="frame" x="14" y="628" width="332" height="120" rx="10"/>
+<text class="cap" text-anchor="start" x="30" y="654">The competing request</text>
+<text class="body muted" text-anchor="start" x="30" y="680">A second update finds no available copy.</text>
+<text class="body muted" text-anchor="start" x="30" y="699">The caller receives HTTP 409 and no</text>
+<text class="body muted" text-anchor="start" x="30" y="718">second hold is written.</text>
+</svg>

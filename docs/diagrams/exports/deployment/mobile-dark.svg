@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="770" viewBox="0 0 360 770" role="img" aria-labelledby="title desc">
+<title id="title">Running the equipment library</title><desc id="desc">A borrower or librarian sends HTTP to a single ASP.NET Core host. Request handlers and two background workers use three role-scoped data sources in a single PostgreSQL instance.</desc>
+<style>text{font-family:Barlow,system-ui,sans-serif}.title{font-size:23px;font-weight:700}.name{font-size:20px;font-weight:700}.body{font-size:15px}.cap,.edge-label{font-size:14px;font-weight:700}.conn{fill:none;stroke-width:2}.card,.frame{stroke-width:1.3}.bg{fill:#172c2a}text{fill:#f0f7f2}.muted{fill:#b4cbc1}.frame{fill:#1e3531;stroke:#b5d7c8}.a{fill:#2c5144}.b{fill:#534331}.c{fill:#314957}.card,.conn{stroke:#b5d7c8}.arrow{fill:#b5d7c8}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="770" rx="12"/>
+<text class="title" text-anchor="start" x="22" y="40">Running the equipment library</text>
+<text class="body muted" text-anchor="start" x="22" y="69">Compose starts the API after migrations</text>
+<text class="body muted" text-anchor="start" x="22" y="88">finish. Each module connects using its own</text>
+<text class="body muted" text-anchor="start" x="22" y="107">database role.</text>
+<rect class="frame" x="14" y="127" width="332" height="475" rx="12"/>
+<text class="cap" text-anchor="start" x="30" y="150">Local Compose deployment</text>
+<g id="reader">
+<rect class="card a" x="38" y="170" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="199">Member or librarian</text>
+<text class="body" text-anchor="start" x="51" y="225">HTTP demo journey</text>
+<text class="body muted" text-anchor="start" x="51" y="247">Borrower or staff identity</text>
+</g>
+<g id="api">
+<rect class="card b" x="38" y="327" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="356">ASP.NET Core host</text>
+<text class="body" text-anchor="start" x="51" y="382">Request endpoints</text>
+<text class="body muted" text-anchor="start" x="51" y="404">Relay and inbox workers</text>
+</g>
+<g id="database">
+<rect class="card c" x="38" y="484" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="513">PostgreSQL</text>
+<text class="body" text-anchor="start" x="51" y="539">One database, three schemas</text>
+<text class="body muted" text-anchor="start" x="51" y="561">Three module runtime roles</text>
+</g>
+<g id="http"><path d="M180 269 V322" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="299">HTTP</text>
+</g>
+<g id="sql"><path d="M180 426 V479" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="456">SQL</text>
+</g>
+<rect class="frame" x="14" y="628" width="332" height="120" rx="10"/>
+<text class="cap" text-anchor="start" x="30" y="654">Startup order</text>
+<text class="body muted" text-anchor="start" x="30" y="680">PostgreSQL becomes healthy, migrations</text>
+<text class="body muted" text-anchor="start" x="30" y="699">complete, then the API starts its</text>
+<text class="body muted" text-anchor="start" x="30" y="718">request and background workers.</text>
+</svg>

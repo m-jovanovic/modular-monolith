@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="770" viewBox="0 0 360 770" role="img" aria-labelledby="title desc">
+<title id="title">Three modules in one host</title><desc id="desc">Lending calls Catalog during copy enrollment. Lending sends committed hold facts to PickupDesk. Each implementation uses its own PostgreSQL role and schema.</desc>
+<style>text{font-family:Barlow,system-ui,sans-serif}.title{font-size:23px;font-weight:700}.name{font-size:20px;font-weight:700}.body{font-size:15px}.cap,.edge-label{font-size:14px;font-weight:700}.conn{fill:none;stroke-width:2}.card,.frame{stroke-width:1.3}.bg{fill:#172c2a}text{fill:#f0f7f2}.muted{fill:#b4cbc1}.frame{fill:#1e3531;stroke:#b5d7c8}.a{fill:#2c5144}.b{fill:#534331}.c{fill:#314957}.card,.conn{stroke:#b5d7c8}.arrow{fill:#b5d7c8}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="770" rx="12"/>
+<text class="title" text-anchor="start" x="22" y="40">Three modules in one host</text>
+<text class="body muted" text-anchor="start" x="22" y="69">Lending consults Catalog at enrollment and</text>
+<text class="body muted" text-anchor="start" x="22" y="88">publishes hold changes to PickupDesk.</text>
+<rect class="frame" x="14" y="127" width="332" height="475" rx="12"/>
+<text class="cap" text-anchor="start" x="30" y="150">ASP.NET Core · one deployable host</text>
+<g id="catalog">
+<rect class="card a" x="38" y="170" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="199">Catalog</text>
+<text class="body" text-anchor="start" x="51" y="225">Which model is this?</text>
+<text class="body muted" text-anchor="start" x="51" y="247">Descriptions and categories</text>
+</g>
+<g id="lending">
+<rect class="card b" x="38" y="327" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="356">Lending</text>
+<text class="body" text-anchor="start" x="51" y="382">Who holds the copy?</text>
+<text class="body muted" text-anchor="start" x="51" y="404">Copies, holds and loans</text>
+</g>
+<g id="pickup-desk">
+<rect class="card c" x="38" y="484" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="513">PickupDesk</text>
+<text class="body" text-anchor="start" x="51" y="539">What should staff prepare?</text>
+<text class="body muted" text-anchor="start" x="51" y="561">Receipts and pickup queue</text>
+</g>
+<g id="catalog-lookup"><path d="M180 324 V271" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="301">lookup</text>
+</g>
+<g id="hold-events"><path d="M180 426 V479" class="conn" marker-end="url(#arrowhead)" stroke-dasharray="6 4"/>
+<text class="edge-label" text-anchor="start" x="194" y="456">event</text>
+</g>
+<rect class="frame" x="14" y="628" width="332" height="120" rx="10"/>
+<text class="cap" text-anchor="start" x="30" y="654">PostgreSQL · one database</text>
+<text class="body" text-anchor="start" x="30" y="683">catalog</text>
+<text class="body" text-anchor="start" x="132" y="683">lending</text>
+<text class="body" text-anchor="start" x="234" y="683">pickup_desk</text>
+<text class="body muted" text-anchor="start" x="30" y="712">Catalog, Lending and PickupDesk each</text>
+<text class="body muted" text-anchor="start" x="30" y="731">connect with their own runtime role.</text>
+</svg>

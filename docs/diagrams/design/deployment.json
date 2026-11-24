@@ -3,12 +3,43 @@
   "title": "Running the equipment library",
   "claim": "Compose starts the API after migrations finish. Each module connects using its own database role.",
   "nodes": [
-    ["reader", "Member or librarian", "HTTP demo journey", "Borrower or staff identity"],
-    ["api", "ASP.NET Core host", "Request endpoints", "Relay and inbox workers"],
-    ["database", "PostgreSQL", "One database, three schemas", "Three module runtime roles"]
+    [
+      "reader",
+      "Member or librarian",
+      "HTTP demo journey",
+      "Borrower or staff identity"
+    ],
+    [
+      "api",
+      "ASP.NET Core host",
+      "Request endpoints",
+      "Relay and inbox workers"
+    ],
+    [
+      "database",
+      "PostgreSQL",
+      "One database, three schemas",
+      "Three module runtime roles"
+    ]
   ],
   "edges": [
-    ["http", "reader", "api", "HTTP", "call"],
-    ["sql", "api", "database", "SQL", "call"]
-  ]
+    [
+      "http",
+      "reader",
+      "api",
+      "HTTP",
+      "call"
+    ],
+    [
+      "sql",
+      "api",
+      "database",
+      "SQL",
+      "call"
+    ]
+  ],
+  "frame": "Local Compose deployment",
+  "footer": "Startup order",
+  "detail": "PostgreSQL becomes healthy, migrations complete, then the API starts its request and background workers.",
+  "alternative": "A borrower or librarian sends HTTP to a single ASP.NET Core host. Request handlers and two background workers use three role-scoped data sources in a single PostgreSQL instance."
 }
