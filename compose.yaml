@@ -1,0 +1,38 @@
+name: equipment-library
+services:
+  postgres:
+    image: postgres:17.12-alpine3.23
+    environment:
+      POSTGRES_DB: equipment
+      POSTGRES_USER: library_admin
+      POSTGRES_PASSWORD: ${LIBRARY_ADMIN_PASSWORD:-local-library-admin}
+    ports:
+      - "127.0.0.1:${LIBRARY_PG_PORT:-55432}:5432"
+    volumes:
+      - library-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library_admin -d equipment"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/postgres/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /library
+    environment:
+      PGHOST: postgres
+      PGDATABASE: equipment
+      PGUSER: library_admin
+      PGPASSWORD: ${LIBRARY_ADMIN_PASSWORD:-local-library-admin}
+      CATALOG_PASSWORD: ${LIBRARY_CATALOG_PASSWORD:-local-catalog}
+      LENDING_PASSWORD: ${LIBRARY_LENDING_PASSWORD:-local-lending}
+      PICKUP_PASSWORD: ${LIBRARY_PICKUP_PASSWORD:-local-pickup}
+    entrypoint: ["/library/infra/postgres/migrate.sh"]
+
+volumes:
+  library-data:
