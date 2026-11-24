@@ -36,7 +36,7 @@ internal sealed class ExpireDueHoldsHandler(LendingContext lending)
             new HoldSnapshot(r.GetGuid(0), r.GetGuid(1), r.GetGuid(2), r.GetString(3), "cancelled", r.GetString(4)), cancellationToken);
         foreach (HoldSnapshot snapshot in snapshots)
         {
-            await HoldEvents.RecordAsync(connection, snapshot, HoldLifecycleEvent.Cancelled, 2, now, cancellationToken);
+            await HoldEvents.RecordAsync(connection, lending.Subscriptions, snapshot, HoldLifecycleEvent.Cancelled, 2, now, cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

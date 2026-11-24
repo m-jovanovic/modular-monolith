@@ -17,6 +17,13 @@
           "EquipmentLibrary.Lending.Domain": "[1.0.0, )"
         }
       },
+      "equipmentlibrary.lending.delivery": {
+        "type": "Project",
+        "dependencies": {
+          "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
+          "Npgsql": "[11.0.0, )"
+        }
+      },
       "equipmentlibrary.lending.domain": {
         "type": "Project"
       },

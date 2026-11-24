@@ -31,7 +31,7 @@ internal sealed class OutboxStore([FromKeyedServices("Lending")] NpgsqlDataSourc
             row.GetInt32(3), row.IsDBNull(4) ? null : row.GetString(4));
     }
 
-    internal async Task CompleteAsync(PendingDelivery item, CancellationToken cancellationToken)
+    internal async Task<bool> CompleteAsync(PendingDelivery item, CancellationToken cancellationToken)
     {
         await using NpgsqlCommand command = database.CreateCommand("""
             UPDATE lending.outbox SET delivered_at = now(), lease_id = NULL, last_failure = NULL
@@ -39,10 +39,10 @@ internal sealed class OutboxStore([FromKeyedServices("Lending")] NpgsqlDataSourc
             """);
         command.Parameters.AddWithValue(item.Id);
         command.Parameters.AddWithValue(item.Lease);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 
-    internal async Task FailAsync(PendingDelivery item, Exception failure, CancellationToken cancellationToken)
+    internal async Task<bool> FailAsync(PendingDelivery item, Exception failure, CancellationToken cancellationToken)
     {
         await using NpgsqlCommand command = database.CreateCommand("""
             UPDATE lending.outbox SET failure_count = failure_count + 1, last_failure = $3,
@@ -54,6 +54,6 @@ internal sealed class OutboxStore([FromKeyedServices("Lending")] NpgsqlDataSourc
         command.Parameters.AddWithValue(item.Lease);
         command.Parameters.AddWithValue(failure.GetType().Name);
         command.Parameters.AddWithValue(TimeSpan.FromSeconds(1 << Math.Min(5, item.Failures)));
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        return await command.ExecuteNonQueryAsync(cancellationToken) == 1;
     }
 }

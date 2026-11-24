@@ -10,7 +10,7 @@ internal static class FindCopies
         Guid? catalogItemId, string? state, int? limit, int? offset, LendingContext lending, CancellationToken cancellationToken)
     {
         if (limit is < 1 or > 100 || offset is < 0 ||
-            state is not (null or "available" or "held" or "on-loan" or "retired"))
+            state is not (null or "available" or "held" or "on-loan" or "retired" or "maintenance"))
         {
             return LendingErrors.Invalid("Use a supported copy state, nonnegative offset and limit between 1 and 100.");
         }

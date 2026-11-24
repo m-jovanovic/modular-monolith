@@ -1,0 +1,6 @@
+<Project>
+  <Import Project="../../Directory.Packages.props" />
+  <ItemGroup>
+    <PackageVersion Include="NATS.Client.JetStream" Version="3.4.1" />
+  </ItemGroup>
+</Project>

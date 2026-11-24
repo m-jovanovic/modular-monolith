@@ -2,6 +2,10 @@
 
 Lending commits the copy transition, hold and immutable event in one transaction. A short PostgreSQL lease gives one worker a chance to deliver it. Each registered subscriber commits its receipt before acknowledging. The producer then marks the envelope delivered. If the process stops between receipt and acknowledgement, the lease expires after 30 seconds and the same message ID is sent again.
 
+Each hold transaction records the names of the host’s registered `IHoldSubscriber` instances in its outbox row. Adding a subscriber in a later deployment affects only newly committed events. Removing a subscriber with outstanding deliveries leaves those messages retryable and eventually quarantined. Drain the old subscription or restore a receiver with the same durable name before redriving them. A host with zero registered subscribers records the event with no outstanding delivery.
+
+Dispatch retries the entire captured recipient set with the original message ID. If the first subscriber accepted before a later subscriber failed, its durable receipt makes the retry harmless. An expired worker that returns after a newer lease owner has acknowledged the envelope cannot alter that outcome. Run the real PostgreSQL checks with `dotnet test tests/Modules/Lending/EquipmentLibrary.Lending.Tests.csproj --filter FullyQualifiedName~SubscriberFanoutTests`.
+
 PickupDesk stores each receipt under the pair of subscriber and message ID. It commits its projection change and completion marker together. A terminal hold leaves a sequence tombstone. These rules cover duplicate delivery, a process restart and a late placement following collection.
 
 ## Inspect the two queues
