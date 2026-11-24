@@ -1,5 +1,6 @@
 using EquipmentLibrary.Lending.Application.Maintenance;
 using EquipmentLibrary.Lending.Maintenance;
+using EquipmentLibrary.Lending.Application.Holds.CloseHold;
 using EquipmentLibrary.Lending.Application.Holds.PlaceHold;
 using EquipmentLibrary.Lending.Copies;
 using EquipmentLibrary.Lending.Delivery;
@@ -23,6 +24,8 @@ public static class LendingModule
         services.AddScoped<MaintenanceOrderHandler>();
         services.AddScoped<IHoldReservationStore, Holds.PostgresHoldReservationStore>();
         services.AddScoped<PlaceHoldCommandHandler>();
+        services.AddScoped<IHoldClosureStore, Holds.PostgresHoldClosureStore>();
+        services.AddScoped<CloseHoldCommandHandler>();
         services.AddScoped<ExpireDueHoldsHandler>();
         if (runExpiryWorker)
         {
