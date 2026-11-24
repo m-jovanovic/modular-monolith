@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Equipment Library hold lifecycle v1",
+  "type": "object",
+  "required": [
+    "messageId",
+    "eventType",
+    "schemaVersion",
+    "sequence",
+    "occurredAt",
+    "data"
+  ],
+  "properties": {
+    "messageId": {
+      "$ref": "#/$defs/id"
+    },
+    "eventType": {
+      "enum": [
+        "lending.hold-placed",
+        "lending.hold-cancelled",
+        "lending.hold-collected"
+      ]
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "holdId",
+        "copyId",
+        "catalogItemId",
+        "barcode",
+        "state"
+      ],
+      "properties": {
+        "holdId": {
+          "$ref": "#/$defs/id"
+        },
+        "copyId": {
+          "$ref": "#/$defs/id"
+        },
+        "catalogItemId": {
+          "$ref": "#/$defs/id"
+        },
+        "barcode": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "state": {
+          "enum": [
+            "held",
+            "cancelled",
+            "collected"
+          ]
+        },
+        "itemTitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "lending.hold-placed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sequence": {
+            "const": 1
+          },
+          "data": {
+            "properties": {
+              "state": {
+                "const": "held"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "lending.hold-cancelled"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sequence": {
+            "minimum": 2
+          },
+          "data": {
+            "properties": {
+              "state": {
+                "const": "cancelled"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "lending.hold-collected"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sequence": {
+            "minimum": 2
+          },
+          "data": {
+            "properties": {
+              "state": {
+                "const": "collected"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "not": {
+        "const": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}

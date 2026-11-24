@@ -1,0 +1,15 @@
+{
+  "messageId": "0e094d85-8abc-48f2-b6bc-61c38aa1570b",
+  "eventType": "lending.hold-placed",
+  "schemaVersion": 1,
+  "sequence": 1,
+  "occurredAt": "2026-01-12T10:01:00+00:00",
+  "data": {
+    "holdId": "80302693-e947-447a-ab17-be456749dca7",
+    "copyId": "16e24268-1223-4284-a505-6a05db0bb1fa",
+    "catalogItemId": "736ba387-67fc-429a-9294-39ab21a3164a",
+    "barcode": "DR-014",
+    "state": "held",
+    "itemTitle": "18 V cordless drill"
+  }
+}

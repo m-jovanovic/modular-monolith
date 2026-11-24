@@ -1,0 +1,15 @@
+{
+  "messageId": "f4e0e2b9-31b2-4f64-b149-b31299209d2f",
+  "eventType": "lending.hold-cancelled",
+  "schemaVersion": 1,
+  "sequence": 2,
+  "occurredAt": "2026-01-12T10:06:00+00:00",
+  "data": {
+    "holdId": "43e97bb6-a57d-4137-aca6-2310f3605bd7",
+    "copyId": "ce2220c8-4c24-4cba-92a1-521e779b8d0c",
+    "catalogItemId": "736ba387-67fc-429a-9294-39ab21a3164a",
+    "barcode": "DR-015",
+    "state": "cancelled",
+    "itemTitle": "18 V cordless drill"
+  }
+}

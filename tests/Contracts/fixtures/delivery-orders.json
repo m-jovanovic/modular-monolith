@@ -1,0 +1,45 @@
+[
+  {
+    "name": "ordered collection",
+    "delivery": [
+      "held.json",
+      "held.json",
+      "collected.json"
+    ],
+    "queueCounts": [
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "name": "cancel before place, redelivery",
+    "delivery": [
+      "cancelled.json",
+      "second-held.json",
+      "cancelled.json"
+    ],
+    "queueCounts": [
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "independent holds",
+    "delivery": [
+      "second-held.json",
+      "held.json",
+      "collected.json",
+      "cancelled.json",
+      "held.json"
+    ],
+    "queueCounts": [
+      1,
+      2,
+      1,
+      0,
+      0
+    ]
+  }
+]
