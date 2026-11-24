@@ -1,0 +1,38 @@
+using EquipmentLibrary.Lending.IntegrationEvents;
+using EquipmentLibrary.PickupDesk.Queries;
+using Xunit;
+
+namespace EquipmentLibrary.PickupDesk.Tests;
+
+public sealed class IndependentRollup
+{
+    [Fact]
+    public void CountUsesNewestSnapshotForEachHoldEvenWhenACopyIsReused()
+    {
+        Guid copy = Guid.NewGuid();
+        HoldLifecycleEvent first = Place(copy);
+        HoldLifecycleEvent next = Place(copy);
+        HoldLifecycleEvent third = Place(Guid.NewGuid());
+        HoldLifecycleEvent closed = first with
+        {
+            Sequence = 2, EventType = HoldLifecycleEvent.Collected, MessageId = Guid.NewGuid(),
+            Data = first.Data with { State = "collected" }
+        };
+        HoldLifecycleEvent cancelled = third with
+        {
+            Sequence = 2, EventType = HoldLifecycleEvent.Cancelled, MessageId = Guid.NewGuid(),
+            Data = third.Data with { State = "cancelled" }
+        };
+
+        Assert.Equal(0, HoldRollup.CountAwaitingPickup([]));
+        Assert.Equal(1, HoldRollup.CountAwaitingPickup([first, first]));
+        Assert.Equal(2, HoldRollup.CountAwaitingPickup([first, next]));
+        Assert.Equal(1, HoldRollup.CountAwaitingPickup([closed, next, first, next, cancelled, third]));
+        Assert.Equal(1, HoldRollup.CountAwaitingPickup([third, first, cancelled, next, closed, closed]));
+        Assert.Equal(0, HoldRollup.CountAwaitingPickup([closed]));
+    }
+
+    private static HoldLifecycleEvent Place(Guid copy) =>
+        new(Guid.NewGuid(), HoldLifecycleEvent.Placed, 1, 1, DateTimeOffset.UtcNow,
+            new(Guid.NewGuid(), copy, Guid.NewGuid(), "TRIPOD-9", "held"));
+}
