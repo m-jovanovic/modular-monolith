@@ -1,0 +1,13 @@
+{
+  "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+  "tasks": {
+    "barcode": {
+      "implementation": "src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs",
+      "test": "tests/Modules/PickupDesk/BarcodeFilterTests.cs"
+    },
+    "rollup": {
+      "implementation": "src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs",
+      "test": "tests/Modules/PickupDesk/HoldRollupTests.cs"
+    }
+  }
+}
