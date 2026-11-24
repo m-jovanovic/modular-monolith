@@ -1,0 +1,77 @@
+name: Release verified teaching reference
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: eqlib-release
+      EQLIB_TEST_PG_ADMIN: Host=127.0.0.1;Port=55432;Database=equipment;Username=library_admin;Password=local-library-admin
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+      - run: docker compose up -d --build --wait --wait-timeout 120
+      - run: ./scripts/verify.sh
+      - run: ./scripts/check-analyzers.sh
+      - run: python3 tests/Journeys/borrow_a_drill.py
+      - run: python3 tests/Journeys/recover_delivery.py
+      - run: ./tests/Persistence/verify.sh
+      - run: python3 tests/AI/verify.py
+      - run: python3 tools/reference/render_diagrams.py --check
+      - run: python3 -m unittest discover -s tools/reference
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Publish the exact tested tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit=$(git rev-parse HEAD)
+          test "$commit" = "$(git rev-parse "refs/tags/$TAG^{commit}")"
+          output="$RUNNER_TEMP/reference"
+          python3 tools/reference/export.py --revision "$commit" --output "$output"
+          cd "$output"
+          sha256sum -c equipment-library-reference.zip.sha256
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          jq -n --arg commit "$commit" --arg tag "$TAG" --arg run "$run_url" \
+            '{commit:$commit,tag:$tag,verificationRun:$run}' > release-verification.json
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            mkdir previous
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir previous
+            cmp equipment-library-reference.zip previous/equipment-library-reference.zip
+            cmp equipment-library-reference.zip.sha256 previous/equipment-library-reference.zip.sha256
+            jq -e --arg commit "$commit" '.commit == $commit' previous/release-verification.json
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "Equipment Library $TAG" --notes-file "$GITHUB_WORKSPACE/CHANGELOG.md" \
+              equipment-library-reference.zip equipment-library-reference.zip.sha256 release-verification.json
+          fi
