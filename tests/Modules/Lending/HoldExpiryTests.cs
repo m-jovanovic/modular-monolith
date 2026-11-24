@@ -110,6 +110,10 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
         Assert.Equal("pickup-window-closed", (await ReservationTests.Json(result)).GetProperty("code").GetString());
         using HttpResponseMessage loan = await member.GetAsync($"/api/lending/loans/{holdId}");
         Assert.Equal(HttpStatusCode.NotFound, loan.StatusCode);
+
+        // This deadline uses a historical clock in the shared database. Leave no hold for another sweep.
+        using HttpResponseMessage cancelled = await member.PostAsync($"/api/lending/holds/{holdId}/cancel", null);
+        Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
     }
 
     [Fact]
