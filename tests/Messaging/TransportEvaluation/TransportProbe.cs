@@ -23,6 +23,12 @@ internal static class TransportProbe
             await setup.StopAsync();
         }
 
+        using (IHost setup = BuildHost(db.Admin, provision: true, receiver: true))
+        {
+            await setup.StartAsync();
+            await setup.StopAsync();
+        }
+
         await db.GrantRuntimeAsync();
         using (IHost host = BuildHost(db.Lending, provision: false))
         {
@@ -35,16 +41,37 @@ internal static class TransportProbe
 
         await InterruptPublisherAsync(db.Lending);
         await ExpectCountsAsync(db, 1);
+        await ExpectReceiverDenialAsync(db);
+        if (await ProbeDatabase.CountAsync(db.Pickup, "SELECT count(*) FROM pickup_desk.projected_holds") != 0)
+        {
+            throw new InvalidOperationException("A denied listener applied a pickup.");
+        }
+    }
+
+    private static async Task ExpectReceiverDenialAsync(ProbeDatabase db)
+    {
+        using var errors = new ReceiverDiagnostics();
+        using IHost host = BuildHost(db.Pickup, provision: false, receiver: true, diagnostics: errors);
         try
         {
-            await ProbeDatabase.CountAsync(db.Pickup, "SELECT count(*) FROM lending.wolverine_queue_handoff");
-            throw new InvalidOperationException("PickupDesk unexpectedly read the sender's transport queue.");
+            await host.StartAsync();
+            await errors.Denied.Task.WaitAsync(TimeSpan.FromSeconds(20));
         }
-        catch (PostgresException e) when (e.SqlState == PostgresErrorCodes.InsufficientPrivilege)
+        catch (Exception ex) when (ReceiverDiagnostics.IsSchemaDenial(ex))
         {
-            Console.WriteLine($"PickupDesk reading the shared queue in lending: PostgreSQL {e.SqlState}.");
+            errors.Denied.TrySetResult();
+        }
+        finally
+        {
+            await host.StopAsync();
         }
 
+        if (!errors.Denied.Task.IsCompletedSuccessfully)
+        {
+            throw new InvalidOperationException("Expected the PickupDesk listener to report insufficient privilege.");
+        }
+
+        Console.WriteLine("PickupDesk Wolverine listener on the shared Lending queue: PostgreSQL 42501.");
     }
 
     internal static async Task PublishThenWaitAsync(string connectionString)
@@ -85,17 +112,25 @@ internal static class TransportProbe
         Console.WriteLine("Interrupted the publisher after database commit and before flush.");
     }
 
-    private static IHost BuildHost(string connectionString, bool provision)
+    private static IHost BuildHost(string connectionString, bool provision, bool receiver = false, ReceiverDiagnostics? diagnostics = null)
     {
         HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true });
-        builder.Logging.AddSimpleConsole().SetMinimumLevel(LogLevel.Error);
+        builder.Logging.SetMinimumLevel(LogLevel.Error);
+        builder.Services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
+        if (diagnostics is null) builder.Logging.AddSimpleConsole();
+        else builder.Logging.AddProvider(diagnostics);
         builder.UseWolverine(options =>
         {
-            options.ServiceName = "EquipmentLibraryTransportProbe";
+            options.ServiceName = receiver ? "EquipmentLibraryPickupProbe" : "EquipmentLibraryLendingProbe";
             options.Durability.Mode = DurabilityMode.Solo;
             options.AutoBuildMessageStorageOnStartup = provision ? AutoCreate.CreateOrUpdate : AutoCreate.None;
-            options.UsePostgresqlPersistenceAndTransport(connectionString, "lending", transportSchema: "lending");
-            options.PublishMessage<HoldRecorded>().ToPostgresqlQueue("handoff").UseDurableOutbox();
+            options.UsePostgresqlPersistenceAndTransport(connectionString, receiver ? "pickup_desk" : "lending", transportSchema: "lending");
+            if (receiver)
+            {
+                options.Discovery.IncludeType(typeof(HoldRecordedHandler));
+                options.ListenToPostgresqlQueue("handoff").UseDurableInbox();
+            }
+            else options.PublishMessage<HoldRecorded>().ToPostgresqlQueue("handoff").UseDurableOutbox();
         });
         return builder.Build();
     }
@@ -126,13 +161,13 @@ internal static class TransportProbe
     private static async Task ExpectCountsAsync(ProbeDatabase db, long expected)
     {
         long holds = await ProbeDatabase.CountAsync(db.Lending, "SELECT count(*) FROM lending.holds");
-        long envelopes = await ProbeDatabase.CountAsync(db.Lending,
-            "SELECT (SELECT count(*) FROM lending.wolverine_outgoing_envelopes) + (SELECT count(*) FROM lending.wolverine_queue_handoff)");
-        if (holds != expected || envelopes != expected)
+        long envelopes = await ProbeDatabase.CountAsync(db.Lending, "SELECT count(*) FROM lending.wolverine_outgoing_envelopes");
+        long queued = await ProbeDatabase.CountAsync(db.Lending, "SELECT count(*) FROM lending.wolverine_queue_handoff");
+        if (holds != expected || envelopes + queued != expected)
         {
-            throw new InvalidOperationException($"Expected {expected} row(s) in each store. Observed holds={holds}, messages={envelopes}.");
+            throw new InvalidOperationException($"Expected {expected} row(s) in each store. Observed holds={holds}, outgoing={envelopes}, queued={queued}.");
         }
 
-        Console.WriteLine($"Lending transaction: holds={holds}, messages={envelopes}.");
+        Console.WriteLine($"Lending transaction: holds={holds}, outgoing={envelopes}, queued={queued}.");
     }
 }

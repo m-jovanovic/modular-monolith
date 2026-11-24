@@ -32,6 +32,7 @@ internal sealed class ProbeDatabase(NpgsqlDataSource server, string connectionSt
                 GRANT USAGE ON SCHEMA lending TO {db.LendingRole};
                 GRANT USAGE ON SCHEMA pickup_desk TO {db.PickupRole};
                 CREATE TABLE lending.holds (id uuid PRIMARY KEY);
+                CREATE TABLE pickup_desk.projected_holds (id uuid PRIMARY KEY);
                 """);
             return db;
         }
