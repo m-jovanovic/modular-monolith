@@ -3,6 +3,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Npgsql" />
     <ProjectReference Include="../../Catalog/Contracts/EquipmentLibrary.Catalog.Contracts.csproj" />
+    <ProjectReference Include="../Domain/EquipmentLibrary.Lending.Domain.csproj" />
     <ProjectReference Include="../IntegrationEvents/EquipmentLibrary.Lending.IntegrationEvents.csproj" />
   </ItemGroup>
 </Project>
