@@ -68,6 +68,63 @@ public sealed class OpenApiTests
         Assert.Empty(fields);
     }
 
+    [Fact]
+    public async Task PublishedResponsesDistinguishJsonBodiesFromEmptySuccessesAndProblems()
+    {
+        using JsonDocument document = await ReadDocumentAsync();
+
+        foreach (JsonElement operation in Operations(document))
+        {
+            string id = operation.GetProperty("operationId").GetString()!;
+            string[] successCodes = id switch
+            {
+                "CreateItem" or "CreateCategory" or "PlaceHold" or "OpenMaintenanceOrder" => ["201"],
+                "EnrollCopy" => ["200", "201"],
+                "ArchiveItem" or "RestoreItem" or "AssignCategory" or "RemoveCategory" or
+                    "ClaimPickup" or "ReleasePickup" or "MarkPickupReady" or "ReportPickupIssue" or
+                    "ResolvePickupIssue" or "RedriveReceipt" or "RedriveDelivery" => ["204"],
+                _ => ["200"]
+            };
+            JsonElement responses = operation.GetProperty("responses");
+            string[] actual = responses.EnumerateObject().Select(response => response.Name)
+                .Where(code => code.StartsWith('2')).Order(StringComparer.Ordinal).ToArray();
+            Assert.True(successCodes.SequenceEqual(actual), $"Unexpected success codes for {id}: {string.Join(", ", actual)}.");
+
+            foreach (string code in actual)
+            {
+                JsonElement response = responses.GetProperty(code);
+                if (code == "204")
+                {
+                    Assert.False(response.TryGetProperty("content", out _), $"{id} advertises a body for 204.");
+                    continue;
+                }
+
+                JsonElement schema = Resolve(document, response.GetProperty("content").GetProperty("application/json").GetProperty("schema"));
+                if (schema.GetProperty("type").GetString() == "array")
+                {
+                    schema = Resolve(document, schema.GetProperty("items"));
+                }
+
+                JsonElement properties = schema.GetProperty("properties");
+                Assert.NotEmpty(properties.EnumerateObject());
+                if (properties.TryGetProperty("items", out JsonElement list))
+                {
+                    Assert.NotEmpty(Resolve(document, list.GetProperty("items")).GetProperty("properties").EnumerateObject());
+                }
+            }
+
+            if (operation.TryGetProperty("security", out _))
+            {
+                Assert.True(responses.TryGetProperty("401", out _) && responses.TryGetProperty("403", out _), id);
+            }
+            foreach (JsonProperty error in responses.EnumerateObject().Where(response => response.Name.StartsWith('4')))
+            {
+                JsonElement problem = error.Value.GetProperty("content").GetProperty("application/problem+json").GetProperty("schema");
+                Assert.True(Resolve(document, problem).GetProperty("properties").TryGetProperty("status", out _), id);
+            }
+        }
+    }
+
     private static IEnumerable<JsonElement> Operations(JsonDocument document) =>
         document.RootElement.GetProperty("paths").EnumerateObject()
             .SelectMany(path => path.Value.EnumerateObject())
