@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -12,6 +13,40 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
         fixture.ExecuteAsync("TRUNCATE pickup_desk.holds, pickup_desk.inbox, pickup_desk.redrives");
 
     public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task ConsumerSpanRetainsTheFirstReceiptParentAcrossRedelivery()
+    {
+        HoldLifecycleEvent held = Place();
+        ActivityContext producer;
+        using (Activity original = new Activity("dispatch").SetIdFormat(ActivityIdFormat.W3C).Start())
+        {
+            producer = original.Context;
+            await fixture.Inbox.AcceptAsync(held, default);
+        }
+
+        using (Activity duplicate = new Activity("redelivery").SetIdFormat(ActivityIdFormat.W3C).Start())
+        {
+            await fixture.Inbox.AcceptAsync(held, default);
+        }
+
+        Activity? observed = null;
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "EquipmentLibrary.PickupDesk.Inbox",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity => observed = activity
+        };
+        ActivitySource.AddActivityListener(listener);
+        Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        Assert.NotNull(observed);
+        Assert.Equal(ActivityKind.Consumer, observed.Kind);
+        Assert.Equal(producer.TraceId, observed.TraceId);
+        Assert.Equal(producer.SpanId, observed.ParentSpanId);
+        Assert.Equal(held.Data.HoldId, observed.GetTagItem("library.hold.id"));
+        Assert.Equal(held.MessageId, observed.GetTagItem("messaging.message.id"));
+        Assert.Equal("completed", observed.GetTagItem("library.delivery.outcome"));
+    }
 
     [Fact]
     public async Task RepeatedDeliveryAndConcurrentWorkersProduceOnePendingPickup()
