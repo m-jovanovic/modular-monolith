@@ -1,0 +1,14 @@
+{
+  "id": "deployment",
+  "title": "Running the equipment library",
+  "claim": "Compose starts the API after migrations finish. Each module connects using its own database role.",
+  "nodes": [
+    ["reader", "Member or librarian", "HTTP demo journey", "Borrower or staff identity"],
+    ["api", "ASP.NET Core host", "Request endpoints", "Relay and inbox workers"],
+    ["database", "PostgreSQL", "One database, three schemas", "Three module runtime roles"]
+  ],
+  "edges": [
+    ["http", "reader", "api", "HTTP", "call"],
+    ["sql", "api", "database", "SQL", "call"]
+  ]
+}

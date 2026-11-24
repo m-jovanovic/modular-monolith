@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="836" height="252" viewBox="0 0 836 252" role="img" aria-labelledby="title desc">
+<title id="title">Running the equipment library</title><desc id="desc">Compose starts the API after migrations finish. Each module connects using its own database role.</desc>
+<style>text{font-family:system-ui,sans-serif;fill:#163c36}.bg{fill:#f8faf7}.card{stroke:#426b61;stroke-width:1.5}.edge{stroke:#275a50;stroke-width:2;fill:none}.arrow{fill:#275a50}.head{font-size:26px;font-weight:700}.name{font-size:18px;font-weight:700}.body{font-size:13px}.link{font-size:12px;font-weight:600}.a{fill:#d9ebdf}.b{fill:#f4e4c9}.c{fill:#dce9f1}@media(prefers-color-scheme:dark){text{fill:#eef6f2}.bg{fill:#16312e}.a{fill:#2d5146}.b{fill:#534735}.c{fill:#334957}.card{stroke:#95b8aa}.edge{stroke:#c1d9c7}.arrow{fill:#c1d9c7}}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" width="836" height="252" rx="14"/>
+<text class="head" x="24" y="44">Running the equipment library</text>
+<text class="body" x="24" y="74">Compose starts the API after migrations finish. Each module connects using its own database role.</text>
+<g id="reader"><rect class="card a" x="24" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="36" y="142">Member or librarian</text>
+<text class="body" x="36" y="174">HTTP demo journey</text>
+<text class="body" x="36" y="197">Borrower or staff identity</text></g>
+<g id="api"><rect class="card b" x="312" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="324" y="142">ASP.NET Core host</text>
+<text class="body" x="324" y="174">Request endpoints</text>
+<text class="body" x="324" y="197">Relay and inbox workers</text></g>
+<g id="database"><rect class="card c" x="600" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="612" y="142">PostgreSQL</text>
+<text class="body" x="612" y="174">One database, three schemas</text>
+<text class="body" x="612" y="197">Three module runtime roles</text></g>
+<g id="http"><path class="edge" d="M234 169 H307" marker-end="url(#arrowhead)"/>
+<text class="link" text-anchor="middle" x="270.5" y="154">HTTP</text></g>
+<g id="sql"><path class="edge" d="M522 169 H595" marker-end="url(#arrowhead)"/>
+<text class="link" text-anchor="middle" x="558.5" y="154">SQL</text></g>
+</svg>
