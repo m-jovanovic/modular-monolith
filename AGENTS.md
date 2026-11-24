@@ -13,3 +13,5 @@ Use the SDK in `global.json` and central versions in `Directory.Packages.props`.
 Scope local verification to the module first. For example, run `./scripts/verify.sh tests/Modules/PickupDesk/EquipmentLibrary.PickupDesk.Tests.csproj`. PostgreSQL integration tests use Docker or a disposable database provisioned from `EQLIB_TEST_PG_ADMIN`. Then run `./scripts/verify.sh` and `./scripts/check-analyzers.sh`.
 
 Return the changed files, commands and observed outputs, including a failing case that your change addresses. For a public contract change, include old and new payload examples and name the producers and consumers affected.
+
+The [Catalog](docs/modules/catalog.md), [Lending](docs/modules/lending.md) and [PickupDesk](docs/modules/pickupdesk.md) cards document the actual use cases and invariants. For a change spanning modules, start with the [reservation trace](docs/tour/trace-a-hold.md) and [dependency rules](docs/architecture/dependency-rules.md). For an agent exercise, use the [frozen task prompts and independent grader](tests/AI/README.md).

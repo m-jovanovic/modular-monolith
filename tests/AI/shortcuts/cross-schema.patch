@@ -1,0 +1,37 @@
+diff --git a/src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs b/src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs
+index 15f4ebb..6476522 100644
+--- a/src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs
++++ b/src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs
+@@ -9,7 +9,7 @@ namespace EquipmentLibrary.PickupDesk.Features;
+ internal static class ListPickups
+ {
+     internal static async Task<IResult> HandleAsync(
+-        Guid? copyId, Guid? assignedTo, int? limit, int? offset,
++        Guid? copyId, Guid? assignedTo, string? barcode, int? limit, int? offset,
+         [FromKeyedServices("PickupDesk")] NpgsqlDataSource database, CancellationToken token)
+     {
+         if (limit is < 1 or > 100 || offset is < 0)
+@@ -17,14 +17,22 @@ internal static class ListPickups
+             return PickupProblems.Create(400, "invalid-request", "Limit must be 1 to 100 and offset must be nonnegative.");
+         }
+ 
++        barcode = barcode?.Trim();
++        if (barcode is { Length: 0 or > 80 })
++        {
++            return PickupProblems.Create(400, "invalid-request", "Provide a barcode of 1 to 80 characters.");
++        }
++
+         await using NpgsqlCommand query = database.CreateCommand($"""
+             SELECT {PickupView.Columns} FROM pickup_desk.holds
+             WHERE hold_state = 'held' AND ($1::uuid IS NULL OR copy_id = $1)
+                 AND ($2::uuid IS NULL OR assigned_to = $2)
+-            ORDER BY occurred_at, hold_id LIMIT $3 OFFSET $4
++                AND ($3::text IS NULL OR EXISTS (SELECT 1 FROM lending.copies c WHERE c.id = copy_id AND c.barcode = $3))
++            ORDER BY occurred_at, hold_id LIMIT $4 OFFSET $5
+             """);
+         query.Parameters.AddWithValue(NpgsqlDbType.Uuid, (object?)copyId ?? DBNull.Value);
+         query.Parameters.AddWithValue(NpgsqlDbType.Uuid, (object?)assignedTo ?? DBNull.Value);
++        query.Parameters.AddWithValue(NpgsqlDbType.Text, (object?)barcode ?? DBNull.Value);
+         query.Parameters.AddWithValue(limit ?? 50);
+         query.Parameters.AddWithValue(offset ?? 0);
+         await using NpgsqlDataReader reader = await query.ExecuteReaderAsync(token);

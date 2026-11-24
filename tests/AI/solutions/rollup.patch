@@ -1,0 +1,95 @@
+diff --git a/src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs b/src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs
+new file mode 100644
+index 0000000..4d6edf6
+--- /dev/null
++++ b/src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs
+@@ -0,0 +1,21 @@
++using EquipmentLibrary.Lending.IntegrationEvents;
++
++namespace EquipmentLibrary.PickupDesk.Queries;
++
++internal static class HoldRollup
++{
++    internal static int CountAwaitingPickup(IEnumerable<HoldLifecycleEvent> events)
++    {
++        var latestByHold = new Dictionary<Guid, HoldLifecycleEvent>();
++        foreach (HoldLifecycleEvent snapshot in events)
++        {
++            Guid holdId = snapshot.Data.HoldId;
++            if (!latestByHold.TryGetValue(holdId, out HoldLifecycleEvent? latest) || snapshot.Sequence > latest.Sequence)
++            {
++                latestByHold[holdId] = snapshot;
++            }
++        }
++
++        return latestByHold.Values.Count(snapshot => snapshot.Data.State == "held");
++    }
++}
+diff --git a/tests/Modules/PickupDesk/HoldRollupTests.cs b/tests/Modules/PickupDesk/HoldRollupTests.cs
+new file mode 100644
+index 0000000..a4ab38c
+--- /dev/null
++++ b/tests/Modules/PickupDesk/HoldRollupTests.cs
+@@ -0,0 +1,62 @@
++using EquipmentLibrary.Lending.IntegrationEvents;
++using EquipmentLibrary.PickupDesk.Queries;
++using Xunit;
++
++namespace EquipmentLibrary.PickupDesk.Tests;
++
++public sealed class HoldRollupTests
++{
++    [Fact]
++    public void EmptyHistoryHasNoHoldsAwaitingPickup()
++    {
++        Assert.Equal(0, HoldRollup.CountAwaitingPickup([]));
++    }
++
++    [Theory]
++    [InlineData(HoldLifecycleEvent.Cancelled, "cancelled")]
++    [InlineData(HoldLifecycleEvent.Collected, "collected")]
++    public void HigherSequenceClosesTheHoldInEitherDeliveryOrder(string eventType, string state)
++    {
++        HoldLifecycleEvent placed = Place();
++        HoldLifecycleEvent closed = placed with
++        {
++            MessageId = Guid.NewGuid(),
++            EventType = eventType,
++            Sequence = 2,
++            OccurredAt = placed.OccurredAt.AddMinutes(-1),
++            Data = placed.Data with { State = state }
++        };
++
++        Assert.Equal(0, HoldRollup.CountAwaitingPickup([placed, closed]));
++        Assert.Equal(0, HoldRollup.CountAwaitingPickup([closed, placed, closed, placed]));
++    }
++
++    [Fact]
++    public void DuplicateDeliveriesAndAnEarlierHoldOnTheSameCopyLeaveTwoAwaitingPickup()
++    {
++        HoldLifecycleEvent previous = Place();
++        HoldLifecycleEvent cancelled = previous with
++        {
++            MessageId = Guid.NewGuid(),
++            EventType = HoldLifecycleEvent.Cancelled,
++            Sequence = 2,
++            Data = previous.Data with { State = "cancelled" }
++        };
++        HoldLifecycleEvent replacement = previous with
++        {
++            MessageId = Guid.NewGuid(),
++            Data = previous.Data with { HoldId = Guid.NewGuid() }
++        };
++        HoldLifecycleEvent otherCopy = Place();
++
++        Assert.Equal(2, HoldRollup.CountAwaitingPickup(
++            [replacement, otherCopy, cancelled, previous, replacement, otherCopy]));
++    }
++
++    private static HoldLifecycleEvent Place()
++    {
++        var copyId = Guid.NewGuid();
++        return new(Guid.NewGuid(), HoldLifecycleEvent.Placed, 1, 1, DateTimeOffset.UnixEpoch,
++            new(Guid.NewGuid(), copyId, Guid.NewGuid(), $"DRILL-{copyId:N}", "held"));
++    }
++}

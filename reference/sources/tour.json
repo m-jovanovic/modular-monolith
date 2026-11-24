@@ -86,12 +86,47 @@
       "snippetId": "deduplicate-receipt",
       "testId": "duplicate-delivery",
       "decisionId": "durable-delivery"
+    },
+    {
+      "id": "boundary-check",
+      "title": "Check an illegal reference",
+      "description": "The architecture grader checks declared project references and compiled assembly dependencies, including an unused illegal edge.",
+      "module": "Architecture",
+      "diagramId": "module-map",
+      "nodeIds": [
+        "catalog",
+        "lending"
+      ],
+      "edgeIds": [
+        "catalog-lookup"
+      ],
+      "snippetId": "check-project-edge",
+      "testId": "reject-foreign-dependency",
+      "decisionId": "owned-data"
+    },
+    {
+      "id": "grade-agent",
+      "title": "Grade an isolated change",
+      "description": "An external grader applies a queue-filter patch to the frozen base and checks its behavior under the PickupDesk runtime identity.",
+      "module": "PickupDesk",
+      "diagramId": "delivery-recovery",
+      "nodeIds": [
+        "inbox",
+        "queue"
+      ],
+      "edgeIds": [
+        "apply-once"
+      ],
+      "snippetId": "grade-baseline-patch",
+      "testId": "barcode-grader",
+      "decisionId": "agent-evaluation"
     }
   ],
   "diagrams": [
     "module-map",
     "reserve-sequence",
-    "delivery-recovery"
+    "delivery-recovery",
+    "deployment"
   ],
   "snippets": [
     {
@@ -128,6 +163,20 @@
       "symbol": "PickupInbox.AcceptAsync",
       "start": "await using NpgsqlCommand compare = database.CreateCommand",
       "end": "throw new InvalidDataException("
+    },
+    {
+      "id": "check-project-edge",
+      "path": "tests/Architecture/BoundaryPolicy.cs",
+      "symbol": "BoundaryPolicy.Check",
+      "start": "foreach (string path in source.Declared)",
+      "end": "CheckEdge(source, destination, \"compiled reference\""
+    },
+    {
+      "id": "grade-baseline-patch",
+      "path": "tests/AI/grade.py",
+      "symbol": "assess",
+      "start": "require(checkout, \"git\", \"checkout\", \"--quiet\"",
+      "end": "allowed = set(definition.values())"
     }
   ],
   "tests": [
@@ -155,6 +204,16 @@
       "id": "duplicate-delivery",
       "path": "tests/Modules/PickupDesk/PickupDeskTests.cs",
       "symbol": "RepeatedDeliveryAndConcurrentWorkersProduceOnePendingPickup"
+    },
+    {
+      "id": "reject-foreign-dependency",
+      "path": "tests/Architecture/BoundaryRegressionTests.cs",
+      "symbol": "MixedCallerRejectsForeignImplementationAndUnusedProjectEdges"
+    },
+    {
+      "id": "barcode-grader",
+      "path": "tests/AI/probes/barcode.cs.txt",
+      "symbol": "ScanUsesExactProjectedBarcodeWithExistingQueueCriteria"
     }
   ],
   "decisions": [

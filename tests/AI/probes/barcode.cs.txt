@@ -1,0 +1,76 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using EquipmentLibrary.Lending.IntegrationEvents;
+using Xunit;
+
+namespace EquipmentLibrary.PickupDesk.Tests;
+
+public sealed class IndependentBarcode(PickupFixture fixture) : IClassFixture<PickupFixture>
+{
+    [Fact]
+    public async Task ScanUsesExactProjectedBarcodeWithExistingQueueCriteria()
+    {
+        HoldLifecycleEvent first = Place("BENCH-A", 1);
+        HoldLifecycleEvent other = Place("BENCH-B", 2);
+        HoldLifecycleEvent third = Place("BENCH-A", 3);
+        foreach (HoldLifecycleEvent message in new[] { first, other, third })
+        {
+            await fixture.Inbox.AcceptAsync(message, default);
+            Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        }
+
+        Assert.Equal(new[] { first.Data.HoldId, other.Data.HoldId, third.Data.HoldId }, await ReadIds(""));
+        Assert.Equal(new[] { first.Data.HoldId, third.Data.HoldId }, await ReadIds("?barcode=%20BENCH-A%20"));
+        Assert.Equal(third.Data.HoldId, Assert.Single(await ReadIds("?barcode=BENCH-A&limit=1&offset=1")));
+        Assert.Empty(await ReadIds("?barcode=bench-a"));
+        Assert.Empty(await ReadIds("?barcode=BENCH"));
+        Assert.Empty(await ReadIds($"?barcode=BENCH-A&copyId={other.Data.CopyId}"));
+        Assert.Empty(await ReadIds($"?barcode=BENCH-A&assignedTo={Guid.NewGuid()}"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("%20")]
+    [InlineData("long")]
+    public async Task SuppliedInvalidBarcodeCarriesTheProblemCode(string value)
+    {
+        string query = value == "long" ? new string('X', 81) : value;
+        using HttpResponseMessage response = await Send("?barcode=" + query, "staff");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("invalid-request", problem.GetProperty("code").GetString());
+    }
+
+    [Theory]
+    [InlineData(null, HttpStatusCode.Unauthorized)]
+    [InlineData("borrower", HttpStatusCode.Forbidden)]
+    public async Task BarcodeFilterPreservesPickupAccess(string? actor, HttpStatusCode expected)
+    {
+        using HttpResponseMessage response = await Send("?barcode=BENCH-A", actor);
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    private static HoldLifecycleEvent Place(string barcode, int minute) =>
+        new(Guid.NewGuid(), HoldLifecycleEvent.Placed, 1, 1, DateTimeOffset.UnixEpoch.AddMinutes(minute),
+            new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), barcode, "held"));
+
+    private async Task<Guid[]> ReadIds(string query)
+    {
+        using HttpResponseMessage response = await Send(query, "staff");
+        response.EnsureSuccessStatusCode();
+        JsonElement queue = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return queue.GetProperty("items").EnumerateArray().Select(row => row.GetProperty("holdId").GetGuid()).ToArray();
+    }
+
+    private async Task<HttpResponseMessage> Send(string query, string? actor)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/pickup-desk/queue" + query);
+        if (actor is not null)
+        {
+            request.Headers.Add("X-Test-Actor", actor);
+        }
+
+        return await fixture.Client.SendAsync(request);
+    }
+}
