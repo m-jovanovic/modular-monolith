@@ -8,7 +8,7 @@ Install the .NET 11 SDK pinned in [global.json](global.json). From the repositor
 
 ```sh
 ./scripts/verify.sh
-dotnet run --project src/Api/EquipmentLibrary.Api.csproj --no-launch-profile -- --urls http://127.0.0.1:5284
+dotnet run --project src/Api/EquipmentLibrary.Api.csproj --launch-profile EquipmentLibrary
 ```
 
 In another terminal, check the host. If port 5284 is in use, choose an available port in both commands.
