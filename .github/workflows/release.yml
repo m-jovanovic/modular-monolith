@@ -37,6 +37,8 @@ jobs:
       - run: ./tests/Persistence/verify.sh
       - run: python3 tests/AI/verify.py
       - run: python3 tools/reference/render_diagrams.py --check
+      - run: npm ci --prefix tools/reference/raster --ignore-scripts
+      - run: npm --prefix tools/reference/raster run check
       - run: python3 -m unittest discover -s tools/reference
 
   publish:

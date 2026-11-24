@@ -9,7 +9,7 @@ Start the [runnable equipment library](../README.md#run-the-library), then follo
 | Why does a successful reservation sometimes take a moment to reach the queue? | [Delivery timeline](tour/trace-a-hold.md), [receipt decision](decisions/durable-delivery.md), [restart exercise](../tests/Journeys/recover_delivery.py) |
 | How can a reviewer catch an illegal module reference? | [Dependency rules](architecture/dependency-rules.md), [mixed-dependency regression fixture](../tests/Architecture/BoundaryRegressionTests.cs) |
 | Can an agent make a scoped change without crossing a module boundary? | [Grading decision](decisions/agent-evaluation.md), [frozen tasks and measured attempts](../tests/AI/README.md) |
-| How can I reuse the diagrams and source snippets? | [Release format and verification](maintainers/reference-releases.md), [editable drawing sources](diagrams/design) |
+| How can I reuse the diagrams and source snippets? | [Release format and verification](maintainers/reference-releases.md), [drawings and mobile/share exports](diagrams/README.md) |
 
 ## Deployment
 
