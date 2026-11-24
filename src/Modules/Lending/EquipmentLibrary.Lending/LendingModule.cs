@@ -32,6 +32,9 @@ public static class LendingModule
         lending.MapPost("/copies/{copyId:guid}/retire", ChangeCirculation.RetireAsync).RequireAuthorization("Lending.Enroll");
         lending.MapPost("/copies/{copyId:guid}/reinstate", ChangeCirculation.ReinstateAsync).RequireAuthorization("Lending.Enroll");
         lending.MapGet("/copies/{copyId:guid}/history", GetCopyHistory.HandleAsync).RequireAuthorization("Pickup.Manage");
+        lending.MapGet("/loans/{loanId:guid}", Loans.GetLoan.HandleAsync).RequireAuthorization();
+        lending.MapGet("/me/loans", Loans.ListMyLoans.HandleAsync).RequireAuthorization("Borrower");
+        lending.MapGet("/loans/overdue", Loans.ListOverdueLoans.HandleAsync).RequireAuthorization("Pickup.Manage");
         return endpoints;
     }
 }
