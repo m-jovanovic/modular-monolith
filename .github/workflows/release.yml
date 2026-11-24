@@ -36,7 +36,7 @@ jobs:
       - run: python3 tests/Journeys/recover_delivery.py
       - run: python3 tests/Journeys/restore_pickup.py
       - run: ./tests/Persistence/verify.sh
-      - name: Verify Wolverine's transactional and role-isolation comparison
+      - name: Run Wolverine's transactional and role-isolation comparison
         run: |
           dotnet restore tests/Messaging/TransportEvaluation --locked-mode
           dotnet run -c Release --no-restore --project tests/Messaging/TransportEvaluation
