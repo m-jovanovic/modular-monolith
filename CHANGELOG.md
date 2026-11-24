@@ -2,7 +2,7 @@
 
 ## v1.0.2
 
-The expiry race test now covers a valid PostgreSQL schedule in which two sweepers both skip a row locked by a collector. It verifies that exactly one expiry commits across those attempts and the first unlocked pass, and that the next sweep has no work. The lending API and production code are identical to v1.0.1.
+The expiry race test now covers a valid PostgreSQL schedule in which two sweepers both skip a row locked by a collector. It verifies that exactly one expiry commits across those attempts and the first unlocked pass, and that the next sweep has no work. Message retry tests also check persisted backoff deadlines against controlled time. The lending API and production code are identical to v1.0.1.
 
 ## v1.0.1
 
