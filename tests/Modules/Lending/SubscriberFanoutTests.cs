@@ -43,6 +43,7 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
         (Guid hold, Guid message) = await ReserveAsync();
         fixture.Inventory.OnNextAttempt(_ => throw new IOException("Receiver unavailable"));
         Assert.Equal(HoldDispatchOutcome.Failed, await fixture.Dispatcher.DeliverNextAsync(default));
+        await VerifyAndPauseFirstRetryAsync(message);
         Assert.Equal(HoldDispatchOutcome.Idle, await fixture.Dispatcher.DeliverNextAsync(default));
         Assert.Equal((1L, 1L, 1), await ReadEffectsAsync(fixture.Circulation.Name, hold, message));
         Assert.Equal((1L, 0L, 0), await ReadEffectsAsync(fixture.Inventory.Name, hold, message));
@@ -134,6 +135,17 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
         Assert.True(await row.ReadAsync());
         Assert.Equal([fixture.Circulation.Name, fixture.Inventory.Name], row.GetFieldValue<string[]>(1));
         return (hold, row.GetGuid(0));
+    }
+
+    private async Task VerifyAndPauseFirstRetryAsync(Guid message)
+    {
+        // Observe the failure transaction's PostgreSQL clock, then hold the retry indefinitely for the idle assertion.
+        await using NpgsqlCommand pause = fixture.Admin.CreateCommand("""
+            UPDATE lending.outbox SET eligible_at = 'infinity'
+            WHERE id = $1 AND failure_count = 1 AND eligible_at = fixture_failed_at + interval '1 second'
+            """);
+        pause.Parameters.AddWithValue(message);
+        Assert.Equal(1, await pause.ExecuteNonQueryAsync());
     }
 
     private async Task MakeEligibleAsync(Guid message)
