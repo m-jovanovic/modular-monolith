@@ -76,6 +76,41 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
     }
 
     [Fact]
+    public async Task CollectionUsesTheClockAfterTheRowLockBecomesAvailable()
+    {
+        using HttpClient staff = fixture.Client("staff");
+        using HttpClient member = fixture.Client("a");
+        fixture.Clock.Set(DateTimeOffset.UnixEpoch);
+        (Guid holdId, _, DateTimeOffset deadline) = await PlaceAsync(staff, member);
+        fixture.Clock.Set(deadline.AddSeconds(-1));
+
+        await using NpgsqlConnection blocker = await fixture.Admin.OpenConnectionAsync();
+        await using NpgsqlTransaction transaction = await blocker.BeginTransactionAsync();
+        await using var lockHold = new NpgsqlCommand("SELECT id FROM lending.holds WHERE id = $1 FOR UPDATE", blocker, transaction);
+        lockHold.Parameters.AddWithValue(holdId);
+        Assert.Equal(holdId, (Guid)(await lockHold.ExecuteScalarAsync())!);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        Task<HttpResponseMessage> collecting = staff.PostAsync($"/api/lending/holds/{holdId}/collect", null, timeout.Token);
+        await using NpgsqlCommand waiting = fixture.Admin.CreateCommand("""
+            SELECT EXISTS (SELECT 1 FROM pg_stat_activity
+                WHERE datname = current_database() AND wait_event_type = 'Lock' AND $1 = ANY(pg_blocking_pids(pid)))
+            """);
+        waiting.Parameters.AddWithValue(blocker.ProcessID);
+        while (!(bool)(await waiting.ExecuteScalarAsync(timeout.Token))!)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(15), timeout.Token);
+        }
+
+        fixture.Clock.Set(deadline);
+        await transaction.RollbackAsync(timeout.Token);
+        using HttpResponseMessage result = await collecting;
+        Assert.Equal(HttpStatusCode.Conflict, result.StatusCode);
+        Assert.Equal("pickup-window-closed", (await ReservationTests.Json(result)).GetProperty("code").GetString());
+        using HttpResponseMessage loan = await member.GetAsync($"/api/lending/loans/{holdId}");
+        Assert.Equal(HttpStatusCode.NotFound, loan.StatusCode);
+    }
+
+    [Fact]
     public async Task HostedWorkerReleasesAnExpiredHoldWhenItsClockTicks()
     {
         using HttpClient staff = fixture.Client("staff");

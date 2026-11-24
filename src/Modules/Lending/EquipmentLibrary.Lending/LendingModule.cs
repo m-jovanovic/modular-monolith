@@ -1,3 +1,4 @@
+using EquipmentLibrary.Lending.Application.Holds.CloseHold;
 using EquipmentLibrary.Lending.Application.Holds.PlaceHold;
 using EquipmentLibrary.Lending.Application.Loans.RenewLoan;
 using EquipmentLibrary.Lending.Application.Maintenance;
@@ -28,6 +29,8 @@ public static class LendingModule
         services.AddScoped<PlaceHoldCommandHandler>();
         services.AddScoped<ILoanRenewalStore, PostgresLoanRenewalStore>();
         services.AddScoped<RenewLoanCommandHandler>();
+        services.AddScoped<IHoldClosureStore, Holds.PostgresHoldClosureStore>();
+        services.AddScoped<CloseHoldCommandHandler>();
         services.AddScoped<ExpireDueHoldsHandler>();
         if (runExpiryWorker)
         {
