@@ -1,3 +1,4 @@
+using EquipmentLibrary.Lending.Application.Holds.PlaceHold;
 using EquipmentLibrary.Lending.Copies;
 using EquipmentLibrary.Lending.Holds.Expiry;
 using EquipmentLibrary.Lending.Persistence;
@@ -13,6 +14,8 @@ public static class LendingModule
     public static IServiceCollection AddLending(this IServiceCollection services, bool runExpiryWorker = true)
     {
         services.AddScoped<LendingContext>();
+        services.AddScoped<IHoldReservationStore, Holds.PostgresHoldReservationStore>();
+        services.AddScoped<PlaceHoldCommandHandler>();
         services.AddScoped<ExpireDueHoldsHandler>();
         if (runExpiryWorker)
         {
@@ -29,7 +32,9 @@ public static class LendingModule
         lending.MapGet("/copies/{copyId:guid}", GetCopy.HandleAsync);
         lending.MapGet("/copies", FindCopies.HandleAsync);
         lending.MapGet("/availability/{catalogItemId:guid}", GetAvailability.HandleAsync);
-        lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower");
+        lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower")
+            .WithName("PlaceHold").Produces<Holds.HoldView>(StatusCodes.Status201Created)
+            .ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
         lending.MapGet("/holds/{holdId:guid}", Holds.GetHold.HandleAsync).RequireAuthorization();
         lending.MapPost("/holds/expire-due", ExpireDueHoldsEndpoint.HandleAsync).RequireAuthorization("Pickup.Manage");
         lending.MapGet("/me/holds", Holds.ListMyHolds.HandleAsync).RequireAuthorization("Borrower");

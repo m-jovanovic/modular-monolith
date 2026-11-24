@@ -138,8 +138,8 @@
     },
     {
       "id": "place-hold",
-      "path": "src/Modules/Lending/EquipmentLibrary.Lending/Holds/PlaceHold.cs",
-      "symbol": "PlaceHold.HandleAsync",
+      "path": "src/Modules/Lending/EquipmentLibrary.Lending/Holds/PostgresHoldReservationStore.cs",
+      "symbol": "PostgresHoldReservationStore.TryPlaceAsync",
       "start": "await using NpgsqlCommand claim = connection.Sql",
       "end": "await transaction.CommitAsync(cancellationToken)"
     },

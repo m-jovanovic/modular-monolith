@@ -11,6 +11,12 @@
       "equipmentlibrary.catalog.contracts": {
         "type": "Project"
       },
+      "equipmentlibrary.lending.application": {
+        "type": "Project",
+        "dependencies": {
+          "EquipmentLibrary.Lending.Domain": "[1.0.0, )"
+        }
+      },
       "equipmentlibrary.lending.domain": {
         "type": "Project"
       },

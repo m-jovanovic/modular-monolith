@@ -6,7 +6,7 @@ A librarian publishes the description of a cordless drill and enrolls a physical
 
 ![The winning transaction](../diagrams/reserve-sequence.svg)
 
-Two signed-in borrowers try to reserve that barcode. Follow the [conditional write](../../src/Modules/Lending/EquipmentLibrary.Lending/Holds/PlaceHold.cs), then the [outbox insert](../../src/Modules/Lending/EquipmentLibrary.Lending/Holds/HoldEvents.cs). The transaction gives precisely one request a hold. Run the proof against PostgreSQL:
+Two signed-in borrowers try to reserve that barcode. Follow the [conditional write](../../src/Modules/Lending/EquipmentLibrary.Lending/Holds/PostgresHoldReservationStore.cs), then the [outbox insert](../../src/Modules/Lending/EquipmentLibrary.Lending/Holds/HoldEvents.cs). The transaction gives precisely one request a hold. Run the proof against PostgreSQL:
 
 ```sh
 dotnet test tests/Modules/Lending/EquipmentLibrary.Lending.Tests.csproj --filter FullyQualifiedName~LastCopyHasOneWinnerAndOneOutboxEvent

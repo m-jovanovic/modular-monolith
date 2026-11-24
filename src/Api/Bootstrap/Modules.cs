@@ -19,7 +19,7 @@ internal static class Modules
 
         builder.Services.AddSingleton(TimeProvider.System);
         bool workersEnabled = builder.Configuration.GetValue("Workers:Enabled", true);
-        builder.Services.AddCatalog().AddLending().AddPickupDesk(workersEnabled);
+        builder.Services.AddCatalog().AddLending(workersEnabled).AddPickupDesk(workersEnabled);
         builder.Services.AddSingleton<IHoldSubscriber, PickupSubscription>();
         builder.Services.AddHoldDelivery(workersEnabled);
     }
