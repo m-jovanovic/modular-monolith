@@ -4,12 +4,14 @@ using EquipmentLibrary.Api.Identity;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddLibraryAuthentication();
 builder.Services.AddApi();
+builder.AddLibraryModules();
 
 WebApplication app = builder.Build();
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapApi();
+app.MapLibraryModules();
 app.Run();
 
 public partial class Program;

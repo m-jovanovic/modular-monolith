@@ -1,20 +1,23 @@
 <Solution>
-  <Folder Name="/src/">
+  <Folder Name="/Api/">
     <Project Path="src/Api/EquipmentLibrary.Api.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/" />
-  <Folder Name="/src/Modules/Catalog/" />
-  <Folder Name="/src/Modules/Catalog/Contracts/">
+  <Folder Name="/Modules/Catalog/">
     <Project Path="src/Modules/Catalog/Contracts/EquipmentLibrary.Catalog.Contracts.csproj" />
+    <Project Path="src/Modules/Catalog/Implementation/EquipmentLibrary.Catalog.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/Lending/" />
-  <Folder Name="/src/Modules/Lending/IntegrationEvents/">
+  <Folder Name="/Modules/Lending/">
+    <Project Path="src/Modules/Lending/EquipmentLibrary.Lending/EquipmentLibrary.Lending.csproj" />
     <Project Path="src/Modules/Lending/IntegrationEvents/EquipmentLibrary.Lending.IntegrationEvents.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Api/EquipmentLibrary.Api.Tests.csproj" />
+  <Folder Name="/Modules/PickupDesk/">
+    <Project Path="src/Modules/PickupDesk/Contracts/EquipmentLibrary.PickupDesk.Contracts.csproj" />
+    <Project Path="src/Modules/PickupDesk/PickupDesk/EquipmentLibrary.PickupDesk.csproj" />
   </Folder>
-  <Folder Name="/tests/Contracts/">
+  <Folder Name="/Tests/">
+    <Project Path="tests/Api/EquipmentLibrary.Api.Tests.csproj" />
     <Project Path="tests/Contracts/EquipmentLibrary.Contracts.Tests.csproj" />
+    <Project Path="tests/Modules/Catalog/EquipmentLibrary.Catalog.Tests.csproj" />
+    <Project Path="tests/Modules/Lending/EquipmentLibrary.Lending.Tests.csproj" />
   </Folder>
 </Solution>
