@@ -19,5 +19,6 @@
     <Project Path="tests/Contracts/EquipmentLibrary.Contracts.Tests.csproj" />
     <Project Path="tests/Modules/Catalog/EquipmentLibrary.Catalog.Tests.csproj" />
     <Project Path="tests/Modules/Lending/EquipmentLibrary.Lending.Tests.csproj" />
+    <Project Path="tests/Modules/PickupDesk/EquipmentLibrary.PickupDesk.Tests.csproj" />
   </Folder>
 </Solution>
