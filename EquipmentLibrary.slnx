@@ -23,4 +23,7 @@
     <Project Path="tests/Modules/Lending/EquipmentLibrary.Lending.Tests.csproj" />
     <Project Path="tests/Modules/PickupDesk/EquipmentLibrary.PickupDesk.Tests.csproj" />
   </Folder>
+  <Folder Name="/Tests/Fixtures/">
+    <Project Path="tests/Architecture/Fixtures/MixedCaller/EquipmentLibrary.Lending.Probe.csproj" />
+  </Folder>
 </Solution>
