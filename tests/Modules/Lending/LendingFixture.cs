@@ -16,18 +16,38 @@ namespace EquipmentLibrary.Lending.Tests;
 public sealed class LendingFixture : IAsyncLifetime
 {
     public static readonly Guid CatalogItemId = Guid.Parse("f22a8917-a47f-48bf-91f3-01f566c2d78f");
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17.12-alpine3.23").Build();
+    private static readonly string[] Permissions = ["Lending.Enroll", "Pickup.Manage", "Staff", "Borrower"];
+    private readonly string _id = Guid.NewGuid().ToString("N");
+    private PostgreSqlContainer? _postgres;
+    private NpgsqlDataSource? _cluster;
     private WebApplication _app = null!;
     public NpgsqlDataSource Admin { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
-        Admin = NpgsqlDataSource.Create(_postgres.GetConnectionString());
-        await using NpgsqlCommand setup = Admin.CreateCommand("""
+        string? external = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN");
+        string connectionString;
+        if (string.IsNullOrWhiteSpace(external))
+        {
+            _postgres = new PostgreSqlBuilder("postgres:17.12-alpine3.23").Build();
+            await _postgres.StartAsync();
+            connectionString = _postgres.GetConnectionString();
+        }
+        else
+        {
+            _cluster = NpgsqlDataSource.Create(external);
+            await using NpgsqlCommand create = _cluster.CreateCommand($"CREATE DATABASE lending_test_{_id}");
+            await create.ExecuteNonQueryAsync();
+            connectionString = new NpgsqlConnectionStringBuilder(external) { Database = $"lending_test_{_id}" }.ConnectionString;
+        }
+
+        Admin = NpgsqlDataSource.Create(connectionString);
+        string role = $"lending_test_{_id}";
+        string password = Guid.NewGuid().ToString("N");
+        await using NpgsqlCommand setup = Admin.CreateCommand($"""
             CREATE SCHEMA lending;
-            CREATE ROLE lending_app LOGIN PASSWORD 'local-test-only';
-            GRANT USAGE ON SCHEMA lending TO lending_app;
+            CREATE ROLE {role} LOGIN PASSWORD '{password}';
+            GRANT USAGE ON SCHEMA lending TO {role};
             """);
         await setup.ExecuteNonQueryAsync();
         foreach (string path in Directory.GetFiles(Path.Combine(AppContext.BaseDirectory, "Migrations"), "*.sql").Order(StringComparer.Ordinal))
@@ -37,11 +57,11 @@ public sealed class LendingFixture : IAsyncLifetime
         }
 
         await using NpgsqlCommand grants = Admin.CreateCommand(
-            "GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA lending TO lending_app");
+            $"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA lending TO {role}");
         await grants.ExecuteNonQueryAsync();
 
-        var runtime = new NpgsqlConnectionStringBuilder(_postgres.GetConnectionString()) { Username = "lending_app", Password = "local-test-only" };
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        var runtime = new NpgsqlConnectionStringBuilder(connectionString) { Username = role, Password = password };
+        WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(["--hostBuilder:reloadConfigOnChange=false"]);
         builder.WebHost.UseTestServer();
         builder.Services.AddKeyedSingleton("Lending", (_, _) => NpgsqlDataSource.Create(runtime.ConnectionString));
         builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
@@ -50,7 +70,7 @@ public sealed class LendingFixture : IAsyncLifetime
         builder.Services.AddAuthentication("Fixture").AddScheme<AuthenticationSchemeOptions, FixtureIdentity>("Fixture", _ => { });
         builder.Services.AddAuthorization(options =>
         {
-            foreach (string permission in new[] { "Lending.Enroll", "Pickup.Manage", "Staff", "Borrower" })
+            foreach (string permission in Permissions)
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim("permission", permission));
             }
@@ -81,7 +101,19 @@ public sealed class LendingFixture : IAsyncLifetime
             await Admin.DisposeAsync();
         }
 
-        await _postgres.DisposeAsync();
+        if (_cluster is not null)
+        {
+            await using NpgsqlCommand dropDatabase = _cluster.CreateCommand($"DROP DATABASE IF EXISTS lending_test_{_id} WITH (FORCE)");
+            await dropDatabase.ExecuteNonQueryAsync();
+            await using NpgsqlCommand dropRole = _cluster.CreateCommand($"DROP ROLE IF EXISTS lending_test_{_id}");
+            await dropRole.ExecuteNonQueryAsync();
+            await _cluster.DisposeAsync();
+        }
+
+        if (_postgres is not null)
+        {
+            await _postgres.DisposeAsync();
+        }
     }
 
     private sealed class KnownCatalog : ICatalogLookup

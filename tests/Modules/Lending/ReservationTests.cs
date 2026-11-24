@@ -6,7 +6,8 @@ using Xunit;
 
 namespace EquipmentLibrary.Lending.Tests;
 
-public sealed class ReservationTests(LendingFixture fixture) : IClassFixture<LendingFixture>
+[Collection(nameof(LendingScenarios))]
+public sealed class ReservationTests(LendingFixture fixture)
 {
     [Fact]
     public async Task LastCopyHasOneWinnerAndOneOutboxEvent()
