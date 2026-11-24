@@ -1,21 +1,11 @@
 using EquipmentLibrary.Api.Bootstrap;
 
-namespace EquipmentLibrary.Api;
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Services.AddApi();
 
-public sealed class Program
-{
-    private Program()
-    {
-    }
+WebApplication app = builder.Build();
+app.UseExceptionHandler();
+app.MapApi();
+app.Run();
 
-    public static void Main(string[] args)
-    {
-        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddApi();
-
-        WebApplication app = builder.Build();
-        app.UseExceptionHandler();
-        app.MapApi();
-        app.Run();
-    }
-}
+public partial class Program;

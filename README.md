@@ -4,7 +4,7 @@ A community equipment library has one cordless drill left. Two members try to re
 
 ## Run the reference
 
-Install the .NET 10 SDK pinned in [global.json](global.json). From the repository root, run the checks and start the API.
+Install the .NET 11 SDK pinned in [global.json](global.json). From the repository root, run the checks and start the API.
 
 ```sh
 ./scripts/verify.sh
