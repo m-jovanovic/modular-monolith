@@ -90,6 +90,67 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
         Assert.Equal(expected, await WriteAsync($"/queue/{Guid.NewGuid()}/claim", actor));
     }
 
+    [Fact]
+    public async Task BadReceiptIsQuarantinedWithoutStoppingOtherReceipts()
+    {
+        var invalid = Guid.NewGuid();
+        await fixture.ExecuteAsync($$"""
+            INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload)
+            VALUES ('pickup-desk.queue.v1', '{{invalid}}', '{}')
+            """);
+        Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        await DeliverAsync(Place());
+        using HttpResponseMessage denied = await SendAsync(HttpMethod.Get, "/inbox/quarantine", "staff");
+        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        JsonElement quarantine = await ReadAsync("/inbox/quarantine", "operator");
+        Assert.Equal(invalid, Assert.Single(quarantine.GetProperty("items").EnumerateArray()).GetProperty("messageId").GetGuid());
+        Assert.Equal(HttpStatusCode.Forbidden, await WriteAsync($"/inbox/{invalid}/redrive", "staff", new { reason = "Reviewed" }));
+        Assert.Equal(HttpStatusCode.NoContent, await WriteAsync($"/inbox/{invalid}/redrive", "operator", new { reason = "Decoder reviewed" }));
+        Assert.Equal(HttpStatusCode.Conflict, await WriteAsync($"/inbox/{invalid}/redrive", "operator", new { reason = "Repeat" }));
+        Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.redrives"));
+        Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.inbox WHERE quarantined_at IS NOT NULL"));
+    }
+
+    [Fact]
+    public async Task FailedCompletionRollsBackProjectionAndOperatorCanRecoverTheOriginalReceipt()
+    {
+        HoldLifecycleEvent held = Place();
+        await fixture.Inbox.AcceptAsync(held, default);
+        await fixture.ExecuteAsync("""
+            CREATE FUNCTION pickup_desk.fail_completion() RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN
+                IF NEW.completed_at IS NOT NULL THEN RAISE EXCEPTION 'simulated completion failure'; END IF;
+                RETURN NEW;
+            END;
+            $$;
+            CREATE TRIGGER fail_completion BEFORE UPDATE ON pickup_desk.inbox
+            FOR EACH ROW EXECUTE FUNCTION pickup_desk.fail_completion()
+            """);
+        try
+        {
+            for (int attempt = 1; attempt <= 5; attempt++)
+            {
+                Assert.True(await fixture.Worker.ProcessNextAsync(default));
+                Assert.Equal(0, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.holds"));
+                Assert.False(await fixture.Worker.ProcessNextAsync(default));
+                await fixture.ExecuteAsync("UPDATE pickup_desk.inbox SET available_at = now() WHERE completed_at IS NULL");
+            }
+        }
+        finally
+        {
+            await fixture.ExecuteAsync("DROP TRIGGER fail_completion ON pickup_desk.inbox; DROP FUNCTION pickup_desk.fail_completion()");
+        }
+
+        Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.inbox WHERE attempts = 5 AND quarantined_at IS NOT NULL"));
+        Assert.Equal(HttpStatusCode.NoContent, await WriteAsync($"/inbox/{held.MessageId}/redrive", "operator", new { reason = "Fault removed" }));
+        Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        await fixture.Inbox.AcceptAsync(held, default);
+        Assert.False(await fixture.Worker.ProcessNextAsync(default));
+        Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.holds WHERE hold_state = 'held'"));
+        Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.inbox WHERE completed_at IS NOT NULL"));
+    }
+
     private static HoldLifecycleEvent Place() =>
         new(Guid.NewGuid(), HoldLifecycleEvent.Placed, 1, 1, DateTimeOffset.UtcNow,
             new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "DRILL-08", "held", "Cordless drill"));
