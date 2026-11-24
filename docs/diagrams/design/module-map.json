@@ -1,0 +1,14 @@
+{
+  "id": "module-map",
+  "title": "Three modules in one host",
+  "claim": "Lending consults Catalog at enrollment and publishes hold changes to PickupDesk.",
+  "nodes": [
+    ["catalog", "Catalog", "Which model is this?", "Descriptions and categories"],
+    ["lending", "Lending", "Who holds the copy?", "Copies, holds and loans"],
+    ["pickup-desk", "PickupDesk", "What should staff prepare?", "Receipts and pickup queue"]
+  ],
+  "edges": [
+    ["catalog-lookup", "lending", "catalog", "lookup", "call"],
+    ["hold-events", "lending", "pickup-desk", "event", "message"]
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "reserve-sequence",
+  "title": "One copy, one winning hold",
+  "claim": "A conditional write, the hold and its outgoing event share one Lending transaction.",
+  "nodes": [
+    ["borrower", "Borrower", "Request the copy", "Two requests can race"],
+    ["lending", "Lending", "Claim an available copy", "A losing request gets 409"],
+    ["postgres", "PostgreSQL", "Commit the winning hold", "Outbox row commits with it"]
+  ],
+  "edges": [
+    ["reserve-request", "borrower", "lending", "reserve", "call"],
+    ["commit-hold", "lending", "postgres", "commit", "call"]
+  ]
+}

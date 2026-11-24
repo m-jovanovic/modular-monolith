@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="836" height="252" viewBox="0 0 836 252" role="img" aria-labelledby="title desc">
+<title id="title">Three modules in one host</title><desc id="desc">Lending consults Catalog at enrollment and publishes hold changes to PickupDesk.</desc>
+<style>text{font-family:system-ui,sans-serif;fill:#163c36}.bg{fill:#f8faf7}.card{stroke:#426b61;stroke-width:1.5}.edge{stroke:#275a50;stroke-width:2;fill:none}.arrow{fill:#275a50}.head{font-size:26px;font-weight:700}.name{font-size:18px;font-weight:700}.body{font-size:13px}.link{font-size:12px;font-weight:600}.a{fill:#d9ebdf}.b{fill:#f4e4c9}.c{fill:#dce9f1}@media(prefers-color-scheme:dark){text{fill:#eef6f2}.bg{fill:#16312e}.a{fill:#2d5146}.b{fill:#534735}.c{fill:#334957}.card{stroke:#95b8aa}.edge{stroke:#c1d9c7}.arrow{fill:#c1d9c7}}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" width="836" height="252" rx="14"/>
+<text class="head" x="24" y="44">Three modules in one host</text>
+<text class="body" x="24" y="74">Lending consults Catalog at enrollment and publishes hold changes to PickupDesk.</text>
+<g id="catalog"><rect class="card a" x="24" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="36" y="142">Catalog</text>
+<text class="body" x="36" y="174">Which model is this?</text>
+<text class="body" x="36" y="197">Descriptions and categories</text></g>
+<g id="lending"><rect class="card b" x="312" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="324" y="142">Lending</text>
+<text class="body" x="324" y="174">Who holds the copy?</text>
+<text class="body" x="324" y="197">Copies, holds and loans</text></g>
+<g id="pickup-desk"><rect class="card c" x="600" y="109" width="206" height="111" rx="9"/>
+<text class="name" x="612" y="142">PickupDesk</text>
+<text class="body" x="612" y="174">What should staff prepare?</text>
+<text class="body" x="612" y="197">Receipts and pickup queue</text></g>
+<g id="catalog-lookup"><path class="edge" d="M308 169 H235" marker-end="url(#arrowhead)"/>
+<text class="link" text-anchor="middle" x="271.5" y="154">lookup</text></g>
+<g id="hold-events"><path class="edge" d="M522 169 H595" marker-end="url(#arrowhead)" stroke-dasharray="5 4"/>
+<text class="link" text-anchor="middle" x="558.5" y="154">event</text></g>
+</svg>

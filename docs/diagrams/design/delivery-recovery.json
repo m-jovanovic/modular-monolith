@@ -1,0 +1,14 @@
+{
+  "id": "delivery-recovery",
+  "title": "Delivery can repeat",
+  "claim": "The receiver durably accepts the original message ID before applying the queue update.",
+  "nodes": [
+    ["outbox", "Lending outbox", "Relay a committed fact", "Keep the ID across retries"],
+    ["inbox", "PickupDesk inbox", "Store one receipt", "Unique subscriber + ID"],
+    ["queue", "Staff pickup queue", "Apply the newest state", "Keep terminal sequences"]
+  ],
+  "edges": [
+    ["durable-accept", "outbox", "inbox", "accept", "message"],
+    ["apply-once", "inbox", "queue", "apply", "call"]
+  ]
+}
