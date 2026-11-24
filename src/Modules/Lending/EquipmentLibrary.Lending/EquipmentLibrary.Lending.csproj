@@ -4,6 +4,7 @@
     <PackageReference Include="Npgsql" />
     <ProjectReference Include="../../Catalog/Contracts/EquipmentLibrary.Catalog.Contracts.csproj" />
     <ProjectReference Include="../Application/EquipmentLibrary.Lending.Application.csproj" />
+    <ProjectReference Include="../Delivery/EquipmentLibrary.Lending.Delivery.csproj" />
     <ProjectReference Include="../Domain/EquipmentLibrary.Lending.Domain.csproj" />
     <ProjectReference Include="../IntegrationEvents/EquipmentLibrary.Lending.IntegrationEvents.csproj" />
   </ItemGroup>

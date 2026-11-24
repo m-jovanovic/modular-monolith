@@ -6,12 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace EquipmentLibrary.Lending.Delivery;
 
-internal sealed partial class HoldRelay(OutboxStore store, IEnumerable<IHoldSubscriber> receivers, ILogger<HoldRelay> logger)
+internal sealed partial class HoldRelay(OutboxStore store, HoldSubscriptions subscriptions, ILogger<HoldRelay> logger)
 {
     private static readonly ActivitySource Activities = new("EquipmentLibrary.Lending.Outbox");
     private static readonly Meter Meter = new("EquipmentLibrary.Lending.Outbox");
     private static readonly Counter<long> Deliveries = Meter.CreateCounter<long>("equipment_library.outbox.deliveries");
-    private readonly Dictionary<string, IHoldSubscriber> _receivers = receivers.ToDictionary(s => s.Name, StringComparer.Ordinal);
 
     internal async Task<bool> DeliverNextAsync(CancellationToken cancellationToken)
     {
@@ -34,12 +33,7 @@ internal sealed partial class HoldRelay(OutboxStore store, IEnumerable<IHoldSubs
 
             foreach (string name in item.Subscribers)
             {
-                if (!_receivers.TryGetValue(name, out IHoldSubscriber? receiver))
-                {
-                    throw new InvalidDataException("The requested durable subscriber is unavailable.");
-                }
-
-                await receiver.AcceptAsync(message, cancellationToken);
+                await subscriptions.Resolve(name).AcceptAsync(message, cancellationToken);
             }
 
             await store.CompleteAsync(item, cancellationToken);

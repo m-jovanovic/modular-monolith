@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -9,6 +10,7 @@ public static class DeliveryModule
 {
     public static IServiceCollection AddHoldDelivery(this IServiceCollection services, bool runWorker)
     {
+        services.TryAddSingleton<HoldSubscriptions>();
         services.AddSingleton<OutboxStore>();
         services.AddSingleton<HoldRelay>();
         if (runWorker)
