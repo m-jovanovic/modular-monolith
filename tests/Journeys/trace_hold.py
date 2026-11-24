@@ -7,7 +7,7 @@ from borrow_a_drill import Library
 from recover_delivery import compose, eventually, sql
 
 
-def trace(base, producer_query=sql, pickup_query=sql, host_logs=None):
+def trace(base, producer_query=sql, pickup_query=sql, host_logs=None, pickup_base=None):
     api = Library(base)
     trace_id = uuid4().hex
     caller_span = secrets.token_hex(8)
@@ -18,7 +18,7 @@ def trace(base, producer_query=sql, pickup_query=sql, host_logs=None):
     _, held = api.request("POST", "/api/lending/holds", "borrower-a", {"copyId": copy["copyId"]}, (201,),
                           traceparent=f"00-{trace_id}-{caller_span}-01")
     hold = str(UUID(held["holdId"]))
-    api.queue(copy["copyId"], [hold])
+    Library(pickup_base or base).queue(copy["copyId"], [hold])
     producer = eventually("acknowledged traced envelope", lambda: producer_query(f"""
         SELECT id || '|' || trace_parent FROM lending.outbox
         WHERE payload->'data'->>'holdId' = '{hold}' AND delivered_at IS NOT NULL

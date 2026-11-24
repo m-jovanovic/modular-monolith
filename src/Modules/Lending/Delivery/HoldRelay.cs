@@ -24,13 +24,13 @@ internal sealed partial class HoldRelay(OutboxStore store, HoldSubscriptions sub
         using Activity? activity = Activities.StartActivity("deliver hold", ActivityKind.Producer, parent)
             ?? (hasParent ? new Activity("deliver hold").SetParentId(item.TraceParent!).Start() : null);
         activity?.SetTag("messaging.operation.type", "send");
-        activity?.SetTag("messaging.message.id", item.Id);
+        activity?.SetTag("messaging.message.id", item.Id.ToString());
         Guid? holdId = null;
         try
         {
             HoldLifecycleEvent message = HoldEventWire.Read(Encoding.UTF8.GetBytes(item.Payload));
             holdId = message.Data.HoldId;
-            activity?.SetTag("library.hold.id", holdId);
+            activity?.SetTag("library.hold.id", message.Data.HoldId.ToString());
             if (message.MessageId != item.Id || item.Subscribers.Length == 0)
             {
                 throw new InvalidDataException("Invalid outbox message identity or subscriber list.");

@@ -50,7 +50,7 @@ internal sealed partial class ProcessPickupInbox(
         ActivityContext.TryParse(traceParent, null, isRemote: true, out ActivityContext parent);
         using Activity? activity = Activities.StartActivity("process hold receipt", ActivityKind.Consumer, parent);
         activity?.SetTag("messaging.operation.type", "process");
-        activity?.SetTag("messaging.message.id", id);
+        activity?.SetTag("messaging.message.id", id.ToString());
         activity?.SetTag("messaging.destination.name", PickupInbox.Subscriber);
         activity?.SetTag("library.delivery.outcome", "uncommitted");
         Guid? holdId = null;
@@ -60,7 +60,7 @@ internal sealed partial class ProcessPickupInbox(
         {
             HoldLifecycleEvent message = HoldEventWire.Read(Encoding.UTF8.GetBytes(payload));
             holdId = message.Data.HoldId;
-            activity?.SetTag("library.hold.id", holdId);
+            activity?.SetTag("library.hold.id", message.Data.HoldId.ToString());
             if (id != message.MessageId)
             {
                 throw new InvalidDataException("The stored receipt ID differs from the event ID.");

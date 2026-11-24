@@ -18,7 +18,16 @@ curl -fsS -H 'Authorization: Bearer demo-staff' http://127.0.0.1:5284/api/lendin
 curl -fsS -H 'Authorization: Bearer demo-staff' http://127.0.0.1:5284/api/pickup-desk/inbox/quarantine
 ```
 
-The producer status reports the oldest pending age, pending messages, acknowledgements and quarantines. A per-message structured log includes the original message ID and hold ID. Subscribe to the activity source and meter named `EquipmentLibrary.Lending.Outbox` to collect producer spans and acknowledgement/failure counts. The original request trace parent is retained in Lending's outbox.
+The producer status reports the oldest pending age, pending messages, acknowledgements and quarantines. The outbox saves the originating HTTP request’s W3C `traceparent`. On its first acceptance, PickupDesk saves the delivery context in its inbox. Retries retain that original parent. The projection worker can resume the trace after a restart. Older rows without tracing context continue through the same processing path.
+
+| Activity source and meter | Activity | Committed outcomes |
+| --- | --- | --- |
+| `EquipmentLibrary.Lending.Outbox` | `deliver hold` (Producer) | `acknowledged`, `failed`, or `lease-lost` when another worker owns the acknowledgement |
+| `EquipmentLibrary.PickupDesk.Inbox` | `process hold receipt` (Consumer) | `completed`, `retry`, `quarantined` |
+
+Both activities expose `messaging.message.id`, `library.hold.id` when the envelope can be decoded, and `library.delivery.outcome`. The counters `equipment_library.outbox.deliveries` and `equipment_library.inbox.receipts` group observations by outcome. Structured logs carry the trace, message and hold IDs. A broker-backed deployment carries the W3C parent in a transport header, preserving the v1 hold envelope.
+
+Run `python3 tests/Journeys/trace_hold.py` against the local stack to send a chosen trace through a real reservation. The journey checks the staff queue, both durable parents and matching IDs in producer and consumer log entries. [Trace journey](../../tests/Journeys/trace_hold.py)
 
 Investigate the failure, repair the unavailable subscriber or consumer, then redrive the original record through the relevant module. The producer drops its retry count, makes the existing envelope eligible and records the operator. The consumer separately records its reason and operator when redriving a quarantined receipt.
 

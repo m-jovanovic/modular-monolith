@@ -43,8 +43,8 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
         Assert.Equal(ActivityKind.Consumer, observed.Kind);
         Assert.Equal(producer.TraceId, observed.TraceId);
         Assert.Equal(producer.SpanId, observed.ParentSpanId);
-        Assert.Equal(held.Data.HoldId, observed.GetTagItem("library.hold.id"));
-        Assert.Equal(held.MessageId, observed.GetTagItem("messaging.message.id"));
+        Assert.Equal(held.Data.HoldId.ToString(), observed.GetTagItem("library.hold.id"));
+        Assert.Equal(held.MessageId.ToString(), observed.GetTagItem("messaging.message.id"));
         Assert.Equal("completed", observed.GetTagItem("library.delivery.outcome"));
     }
 

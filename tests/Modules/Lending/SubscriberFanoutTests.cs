@@ -32,8 +32,8 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
         Assert.Equal(HoldDispatchOutcome.Delivered, await fixture.Dispatcher.DeliverNextAsync(default));
         Assert.NotNull(observed);
         Assert.Equal(ActivityKind.Producer, observed.Kind);
-        Assert.Equal(hold, observed.GetTagItem("library.hold.id"));
-        Assert.Equal(message, observed.GetTagItem("messaging.message.id"));
+        Assert.Equal(hold.ToString(), observed.GetTagItem("library.hold.id"));
+        Assert.Equal(message.ToString(), observed.GetTagItem("messaging.message.id"));
         Assert.Equal("acknowledged", observed.GetTagItem("library.delivery.outcome"));
     }
 
