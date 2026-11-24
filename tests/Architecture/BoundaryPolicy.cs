@@ -73,10 +73,11 @@ internal sealed record BoundaryPolicy(string CompositionRoot, Dictionary<string,
                 {
                     diagnostics.Add($"{source.Path} -> {assembly}: compiled reference to an unregistered product assembly.");
                 }
-                else if (IsDomain(source) && (assembly.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) ||
+                else if ((IsDomain(source) || IsApplication(source)) && (assembly.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal) ||
                     assembly.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) || assembly == "Npgsql"))
                 {
-                    diagnostics.Add($"{source.Path} -> {assembly}: domain cannot depend on infrastructure.");
+                    string layer = IsDomain(source) ? "domain" : "application";
+                    diagnostics.Add($"{source.Path} -> {assembly}: {layer} cannot depend on infrastructure.");
                 }
             }
         }
@@ -106,6 +107,11 @@ internal sealed record BoundaryPolicy(string CompositionRoot, Dictionary<string,
         {
             rule = "domain cannot depend outward";
         }
+        else if (IsApplication(source) && owner == target && !IsDomain(destination) &&
+            !IsApplication(destination) && !policy.Exports.Contains(destination.Assembly, StringComparer.Ordinal))
+        {
+            rule = "application cannot depend on a persistence or HTTP adapter";
+        }
         else if (owner == target && policy.Exports.Contains(source.Assembly, StringComparer.Ordinal) &&
             !policy.Exports.Contains(destination.Assembly, StringComparer.Ordinal))
         {
@@ -129,6 +135,9 @@ internal sealed record BoundaryPolicy(string CompositionRoot, Dictionary<string,
     }
 
     private static bool IsDomain(ProductionProject project) => project.Assembly.EndsWith(".Domain", StringComparison.Ordinal);
+
+    private static bool IsApplication(ProductionProject project) =>
+        project.Assembly.EndsWith(".Application", StringComparison.Ordinal);
 
     private static void CheckCycles(Dictionary<string, HashSet<string>> graph, List<string> diagnostics)
     {

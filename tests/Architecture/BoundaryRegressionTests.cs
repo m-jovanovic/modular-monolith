@@ -24,6 +24,20 @@ public sealed class BoundaryRegressionTests
     }
 
     [Fact]
+    public void ApplicationCanDependOnDomainButCannotImportTheHttpOrPersistenceAdapter()
+    {
+        var domain = new ProductionProject("src/Modules/Lending/Domain/Domain.csproj", "EquipmentLibrary.Lending.Domain", [], []);
+        var adapter = new ProductionProject("src/Modules/Lending/Storage/Storage.csproj", "EquipmentLibrary.Lending.Storage", [], []);
+        var app = new ProductionProject("src/Modules/Lending/Application/Application.csproj", "EquipmentLibrary.Lending.Application",
+            [domain.Path, adapter.Path], ["Microsoft.AspNetCore.Http", "Npgsql"]);
+        List<string> errors = BoundaryPolicy.Load(ProjectGraph.FindRoot()).Check([domain, adapter, app]);
+        Assert.Contains(errors, e => e.Contains("application cannot depend on a persistence or HTTP adapter", StringComparison.Ordinal));
+        Assert.Contains(errors, e => e.Contains("Microsoft.AspNetCore.Http: application cannot depend on infrastructure", StringComparison.Ordinal));
+        Assert.Contains(errors, e => e.Contains("Npgsql: application cannot depend on infrastructure", StringComparison.Ordinal));
+        Assert.DoesNotContain(errors, e => e.Contains($"-> {domain.Path}", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void UnregisteredModuleIsReportedEvenWhenItHasNoDependencies()
     {
         var project = new ProductionProject("src/Modules/Gifts/EquipmentLibrary.Gifts.csproj", "EquipmentLibrary.Gifts", [], []);
