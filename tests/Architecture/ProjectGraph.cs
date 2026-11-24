@@ -78,12 +78,12 @@ internal static class ProjectGraph
             throw new FileNotFoundException($"Discovered {path}, but the {configuration} build did not produce {binary}. Include this project in the solution and the architecture check's build dependencies.");
         }
 
-        List<string> declared = doc.RootElement.GetProperty("Items").GetProperty("ProjectReference").EnumerateArray()
+        var declared = doc.RootElement.GetProperty("Items").GetProperty("ProjectReference").EnumerateArray()
             .Select(item => Relative(root, item.GetProperty("FullPath").GetString()!)).ToList();
         using FileStream stream = File.OpenRead(binary);
         using var pe = new PEReader(stream);
         MetadataReader metadata = pe.GetMetadataReader();
-        List<string> compiled = metadata.AssemblyReferences.Select(handle =>
+        var compiled = metadata.AssemblyReferences.Select(handle =>
             metadata.GetString(metadata.GetAssemblyReference(handle).Name)).ToList();
         return new ProductionProject(Relative(root, path), assembly, declared, compiled);
     }

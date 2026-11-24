@@ -15,8 +15,8 @@ internal sealed record BoundaryPolicy(string CompositionRoot, Dictionary<string,
 
     internal List<string> Check(IReadOnlyList<ProductionProject> projects)
     {
-        Dictionary<string, ProductionProject> paths = projects.ToDictionary(p => p.Path, StringComparer.Ordinal);
-        Dictionary<string, ProductionProject> assemblies = projects.ToDictionary(p => p.Assembly, StringComparer.Ordinal);
+        var paths = projects.ToDictionary(p => p.Path, StringComparer.Ordinal);
+        var assemblies = projects.ToDictionary(p => p.Assembly, StringComparer.Ordinal);
         var diagnostics = new List<string>();
         var graph = projects.ToDictionary(p => p.Assembly, _ => new HashSet<string>(StringComparer.Ordinal), StringComparer.Ordinal);
         foreach ((string module, ModulePolicy policy) in Modules)
