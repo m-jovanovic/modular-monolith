@@ -3,12 +3,43 @@
   "title": "One copy, one winning hold",
   "claim": "A conditional write, the hold and its outgoing event share one Lending transaction.",
   "nodes": [
-    ["borrower", "Borrower", "Request the copy", "Two requests can race"],
-    ["lending", "Lending", "Claim an available copy", "A losing request gets 409"],
-    ["postgres", "PostgreSQL", "Commit the winning hold", "Outbox row commits with it"]
+    [
+      "borrower",
+      "Borrower",
+      "Request the copy",
+      "Two requests can race"
+    ],
+    [
+      "lending",
+      "Lending",
+      "Claim an available copy",
+      "A losing request gets 409"
+    ],
+    [
+      "postgres",
+      "PostgreSQL",
+      "Commit the winning hold",
+      "Outbox row commits with it"
+    ]
   ],
   "edges": [
-    ["reserve-request", "borrower", "lending", "reserve", "call"],
-    ["commit-hold", "lending", "postgres", "commit", "call"]
-  ]
+    [
+      "reserve-request",
+      "borrower",
+      "lending",
+      "reserve",
+      "call"
+    ],
+    [
+      "commit-hold",
+      "lending",
+      "postgres",
+      "commit",
+      "call"
+    ]
+  ],
+  "frame": "One Lending transaction",
+  "footer": "The competing request",
+  "detail": "A second update finds no available copy. The caller receives HTTP 409 and no second hold is written.",
+  "alternative": "Two members request one copy. A conditional write claims availability. The hold and its outgoing fact commit together inside one PostgreSQL transaction."
 }

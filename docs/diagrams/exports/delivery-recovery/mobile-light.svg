@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="770" viewBox="0 0 360 770" role="img" aria-labelledby="title desc">
+<title id="title">Delivery can repeat</title><desc id="desc">The relay forwards the original message ID. PickupDesk durably accepts it before acknowledgment. A later transaction applies the snapshot and marks its receipt complete.</desc>
+<style>text{font-family:Barlow,system-ui,sans-serif}.title{font-size:23px;font-weight:700}.name{font-size:20px;font-weight:700}.body{font-size:15px}.cap,.edge-label{font-size:14px;font-weight:700}.conn{fill:none;stroke-width:2}.card,.frame{stroke-width:1.3}.bg{fill:#f8faf6}text{fill:#153c37}.muted{fill:#57736b}.frame{fill:#ffffff;stroke:#416b60}.a{fill:#d8eade}.b{fill:#fae7cd}.c{fill:#ddecf4}.card,.conn{stroke:#416b60}.arrow{fill:#416b60}</style>
+<defs><marker id="arrowhead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path class="arrow" d="M0 0 L7 3.5 L0 7Z"/></marker></defs>
+<rect class="bg" x="0" y="0" width="360" height="770" rx="12"/>
+<text class="title" text-anchor="start" x="22" y="40">Delivery can repeat</text>
+<text class="body muted" text-anchor="start" x="22" y="69">The receiver durably accepts the original</text>
+<text class="body muted" text-anchor="start" x="22" y="88">message ID before applying the queue update.</text>
+<rect class="frame" x="14" y="127" width="332" height="475" rx="12"/>
+<text class="cap" text-anchor="start" x="30" y="150">Receipt and projection transactions</text>
+<g id="outbox">
+<rect class="card a" x="38" y="170" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="199">Lending outbox</text>
+<text class="body" text-anchor="start" x="51" y="225">Relay a committed fact</text>
+<text class="body muted" text-anchor="start" x="51" y="247">Keep the ID across retries</text>
+</g>
+<g id="inbox">
+<rect class="card b" x="38" y="327" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="356">PickupDesk inbox</text>
+<text class="body" text-anchor="start" x="51" y="382">Store one receipt</text>
+<text class="body muted" text-anchor="start" x="51" y="404">Unique subscriber + ID</text>
+</g>
+<g id="queue">
+<rect class="card c" x="38" y="484" width="284" height="96" rx="8"/>
+<text class="name" text-anchor="start" x="51" y="513">Staff pickup queue</text>
+<text class="body" text-anchor="start" x="51" y="539">Apply the newest state</text>
+<text class="body muted" text-anchor="start" x="51" y="561">Keep terminal sequences</text>
+</g>
+<g id="durable-accept"><path d="M180 269 V322" class="conn" marker-end="url(#arrowhead)" stroke-dasharray="6 4"/>
+<text class="edge-label" text-anchor="start" x="194" y="299">accept</text>
+</g>
+<g id="apply-once"><path d="M180 426 V479" class="conn" marker-end="url(#arrowhead)"/>
+<text class="edge-label" text-anchor="start" x="194" y="456">apply</text>
+</g>
+<rect class="frame" x="14" y="628" width="332" height="120" rx="10"/>
+<text class="cap" text-anchor="start" x="30" y="654">After a process restart</text>
+<text class="body muted" text-anchor="start" x="30" y="680">The relay can repeat an accepted</text>
+<text class="body muted" text-anchor="start" x="30" y="699">delivery. The inbox recognizes the ID</text>
+<text class="body muted" text-anchor="start" x="30" y="718">and keeps the newest sequence for each</text>
+<text class="body muted" text-anchor="start" x="30" y="737">hold.</text>
+</svg>
