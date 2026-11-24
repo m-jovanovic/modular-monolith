@@ -21,6 +21,10 @@ jobs:
           persist-credentials: false
       - name: Start the published host with real module-owned storage
         run: docker compose up -d --build --wait --wait-timeout 120
+      - name: Check the public use-case inventory against the running application
+        run: |
+          python3 tools/api/inventory.py --markdown "$RUNNER_TEMP/use-cases.md"
+          diff -u docs/use-cases.md "$RUNNER_TEMP/use-cases.md"
       - name: Race two borrowers and complete the staff workflow
         run: python3 tests/Journeys/borrow_a_drill.py
       - name: Kill the host after durable receipt and verify recovery

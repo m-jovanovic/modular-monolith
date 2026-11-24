@@ -30,6 +30,15 @@ jobs:
           cache: true
           cache-dependency-path: '**/packages.lock.json'
       - run: docker compose up -d --build --wait --wait-timeout 120
+      - name: Run the public API inventory against the release host
+        run: |
+          python3 tools/api/inventory.py --markdown "$RUNNER_TEMP/use-cases.md" --openapi "$RUNNER_TEMP/equipment-library.openapi.json"
+          diff -u docs/use-cases.md "$RUNNER_TEMP/use-cases.md"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: public-api-document
+          path: ${{ runner.temp }}/equipment-library.openapi.json
+          overwrite: true
       - run: ./scripts/verify.sh
       - run: ./scripts/check-analyzers.sh
       - run: python3 tests/Journeys/borrow_a_drill.py
@@ -71,6 +80,7 @@ jobs:
           test "$commit" = "$(git rev-parse "refs/tags/$TAG^{commit}")"
           output="$RUNNER_TEMP/reference"
           python3 tools/reference/export.py --revision "$commit" --output "$output"
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name public-api-document --dir "$output"
           cd "$output"
           sha256sum -c equipment-library-reference.zip.sha256
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
@@ -80,11 +90,12 @@ jobs:
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             mkdir previous
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir previous
+            cmp equipment-library.openapi.json previous/equipment-library.openapi.json
             cmp equipment-library-reference.zip previous/equipment-library-reference.zip
             cmp equipment-library-reference.zip.sha256 previous/equipment-library-reference.zip.sha256
             jq -e --arg commit "$commit" '.commit == $commit' previous/release-verification.json
           else
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
               --title "Equipment Library $TAG" --notes-file "$GITHUB_WORKSPACE/CHANGELOG.md" \
-              equipment-library-reference.zip equipment-library-reference.zip.sha256 release-verification.json
+              equipment-library-reference.zip equipment-library-reference.zip.sha256 release-verification.json equipment-library.openapi.json
           fi

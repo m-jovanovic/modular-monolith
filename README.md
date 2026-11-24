@@ -17,6 +17,8 @@ The walkthrough creates a catalog item and a uniquely barcoded copy, sends **two
 
 ## Explore the use cases
 
+[Browse every use case by module, HTTP route and permission](docs/use-cases.md).
+
 | Module | What you can do | Code and API guide |
 | --- | --- | --- |
 | Catalog | Publish and edit equipment descriptions, search the catalog, archive and restore items, create categories, classify equipment and browse a category. | [Catalog guide](docs/modules/catalog.md) · [Use cases](src/Modules/Catalog/Implementation/) |
