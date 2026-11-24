@@ -35,6 +35,9 @@ public static class PickupDeskModule
         group.MapPost("/queue/{holdId:guid}/issues/resolve", ResolvePickupIssue.HandleAsync);
         group.MapGet("/workload", GetDeskWorkload.HandleAsync);
         group.MapGet("/history", ListClosedPickups.HandleAsync);
+        RouteGroupBuilder operations = group.MapGroup("/inbox").RequireAuthorization("Pickup.Operate");
+        operations.MapGet("/quarantine", ListQuarantinedReceipts.HandleAsync);
+        operations.MapPost("/{messageId:guid}/redrive", RedriveReceipt.HandleAsync);
         return endpoints;
     }
 }
