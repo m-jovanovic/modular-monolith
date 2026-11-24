@@ -1,3 +1,4 @@
+using EquipmentLibrary.Catalog.Categories;
 using EquipmentLibrary.Catalog.Contracts;
 using EquipmentLibrary.Catalog.Items;
 
@@ -15,6 +16,8 @@ public static class CatalogModule
         services.AddScoped<UpdateItem.Handler>();
         services.AddScoped<SearchItems.Handler>();
         services.AddScoped<ChangeItemPublication.Handler>();
+        services.AddScoped<CreateCategory.Handler>();
+        services.AddScoped<BrowseCategories.Handler>();
         return services;
     }
 
@@ -26,6 +29,9 @@ public static class CatalogModule
         UpdateItem.MapEndpoint(items);
         SearchItems.MapEndpoints(items);
         ChangeItemPublication.MapEndpoints(items);
+        RouteGroupBuilder categories = endpoints.MapGroup("/api/catalog/categories");
+        CreateCategory.MapEndpoint(categories);
+        BrowseCategories.MapEndpoints(categories);
         return endpoints;
     }
 }
