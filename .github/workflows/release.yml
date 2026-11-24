@@ -47,6 +47,7 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -67,8 +68,9 @@ jobs:
           cd "$output"
           sha256sum -c equipment-library-reference.zip.sha256
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          jq -n --arg commit "$commit" --arg tag "$TAG" --arg run "$run_url" \
-            '{commit:$commit,tag:$tag,verificationRun:$run}' > release-verification.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs" > "$RUNNER_TEMP/verified-jobs.json"
+          python3 "$GITHUB_WORKSPACE/tools/release/report.py" --commit "$commit" --tag "$TAG" --run "$run_url" \
+            --jobs "$RUNNER_TEMP/verified-jobs.json" --directory "$output"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             mkdir previous
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir previous
