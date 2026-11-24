@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using JasperFx;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,12 +24,16 @@ internal static class TransportProbe
         }
 
         await db.GrantRuntimeAsync();
-        using IHost host = BuildHost(db.Lending, provision: false);
-        await host.StartAsync();
-        IWolverineRuntime runtime = host.Services.GetRequiredService<IWolverineRuntime>();
-        await WriteHoldAsync(db.Lending, runtime, commit: false);
-        await ExpectCountsAsync(db, 0);
-        await WriteHoldAsync(db.Lending, runtime, commit: true);
+        using (IHost host = BuildHost(db.Lending, provision: false))
+        {
+            await host.StartAsync();
+            IWolverineRuntime runtime = host.Services.GetRequiredService<IWolverineRuntime>();
+            await WriteHoldAsync(db.Lending, runtime, commit: false);
+            await ExpectCountsAsync(db, 0);
+            await host.StopAsync();
+        }
+
+        await InterruptPublisherAsync(db.Lending);
         await ExpectCountsAsync(db, 1);
         try
         {
@@ -40,7 +45,44 @@ internal static class TransportProbe
             Console.WriteLine($"PickupDesk reading the shared queue in lending: PostgreSQL {e.SqlState}.");
         }
 
-        await host.StopAsync();
+    }
+
+    internal static async Task PublishThenWaitAsync(string connectionString)
+    {
+        using IHost host = BuildHost(connectionString, provision: false);
+        await host.StartAsync();
+        await WriteHoldAsync(connectionString, host.Services.GetRequiredService<IWolverineRuntime>(), commit: true);
+        // The parent kills this process after commit, before FlushOutgoingMessagesAsync.
+        Console.WriteLine("COMMITTED");
+        await Task.Delay(Timeout.InfiniteTimeSpan);
+    }
+
+    private static async Task InterruptPublisherAsync(string connectionString)
+    {
+        var start = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true };
+        start.ArgumentList.Add(typeof(TransportProbe).Assembly.Location);
+        start.ArgumentList.Add("publisher");
+        start.Environment.Remove("EQLIB_TEST_PG_ADMIN");
+        start.Environment["EQLIB_PROBE_PUBLISHER"] = connectionString;
+        using Process publisher = Process.Start(start) ?? throw new InvalidOperationException("Publisher did not start.");
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            string? line;
+            do
+            {
+                line = await publisher.StandardOutput.ReadLineAsync(deadline.Token);
+                if (line is null) throw new InvalidOperationException("Publisher exited before committing.");
+            }
+            while (line != "COMMITTED");
+        }
+        finally
+        {
+            if (!publisher.HasExited) publisher.Kill(entireProcessTree: true);
+            await publisher.WaitForExitAsync();
+        }
+
+        Console.WriteLine("Interrupted the publisher after database commit and before flush.");
     }
 
     private static IHost BuildHost(string connectionString, bool provision)
