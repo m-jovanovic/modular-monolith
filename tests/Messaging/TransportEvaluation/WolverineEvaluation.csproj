@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql" Version="11.0.0" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.65.1" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.65.1" />
+  </ItemGroup>
+</Project>
