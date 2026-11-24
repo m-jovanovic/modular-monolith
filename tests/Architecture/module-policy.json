@@ -1,0 +1,17 @@
+{
+  "compositionRoot": "src/Api/EquipmentLibrary.Api.csproj",
+  "modules": {
+    "Catalog": {
+      "exports": ["EquipmentLibrary.Catalog.Contracts"],
+      "imports": []
+    },
+    "Lending": {
+      "exports": ["EquipmentLibrary.Lending.IntegrationEvents"],
+      "imports": ["EquipmentLibrary.Catalog.Contracts"]
+    },
+    "PickupDesk": {
+      "exports": ["EquipmentLibrary.PickupDesk.Contracts"],
+      "imports": ["EquipmentLibrary.Lending.IntegrationEvents"]
+    }
+  }
+}
