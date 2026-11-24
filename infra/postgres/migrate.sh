@@ -3,6 +3,8 @@ set -eu
 cd "$(dirname "$0")/../.."
 : "${CATALOG_PASSWORD:?}" "${LENDING_PASSWORD:?}" "${PICKUP_PASSWORD:?}"
 psql -X -v ON_ERROR_STOP=1 <<'SQL'
+BEGIN;
+SELECT pg_advisory_xact_lock(hashtext('equipment-library-bootstrap'), hashtext('migration-ledger'));
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 CREATE SCHEMA IF NOT EXISTS library_meta;
 CREATE TABLE IF NOT EXISTS library_meta.migrations (
@@ -12,6 +14,7 @@ CREATE TABLE IF NOT EXISTS library_meta.migrations (
     applied_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (module, script)
 );
+COMMIT;
 SQL
 for module in Catalog Lending PickupDesk; do
     case "$module" in
@@ -20,7 +23,8 @@ for module in Catalog Lending PickupDesk; do
         PickupDesk) schema=pickup_desk; password=$PICKUP_PASSWORD ;;
     esac
     owner="${schema}_owner"
-    psql -X -v ON_ERROR_STOP=1 -v schema="$schema" -v owner="$owner" -v app="${schema}_app" -v password="$password" -f infra/postgres/module.sql
+    MODULE_PASSWORD="$password" psql -X -d "${EQLIB_ROLE_DATABASE:-postgres}" -v ON_ERROR_STOP=1 -v owner="$owner" -v app="${schema}_app" -f infra/postgres/roles.sql
+    psql -X -v ON_ERROR_STOP=1 -v module="$module" -v schema="$schema" -v owner="$owner" -v app="${schema}_app" -f infra/postgres/module.sql
     for file in src/Modules/"$module"/Migrations/[0-9]*.sql; do
         [ -f "$file" ] || continue
         checksum=$(sha256sum "$file" | cut -d' ' -f1)
