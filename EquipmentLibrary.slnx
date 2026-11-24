@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/Modules/Lending/">
     <Project Path="src/Modules/Lending/Delivery/EquipmentLibrary.Lending.Delivery.csproj" />
+    <Project Path="src/Modules/Lending/Domain/EquipmentLibrary.Lending.Domain.csproj" />
     <Project Path="src/Modules/Lending/EquipmentLibrary.Lending/EquipmentLibrary.Lending.csproj" />
     <Project Path="src/Modules/Lending/IntegrationEvents/EquipmentLibrary.Lending.IntegrationEvents.csproj" />
   </Folder>

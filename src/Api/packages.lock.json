@@ -100,6 +100,7 @@
         "type": "Project",
         "dependencies": {
           "EquipmentLibrary.Catalog.Contracts": "[1.0.0, )",
+          "EquipmentLibrary.Lending.Domain": "[1.0.0, )",
           "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
           "Npgsql": "[11.0.0, )"
         }
@@ -110,6 +111,9 @@
           "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
           "Npgsql": "[11.0.0, )"
         }
+      },
+      "equipmentlibrary.lending.domain": {
+        "type": "Project"
       },
       "equipmentlibrary.lending.integrationevents": {
         "type": "Project"
