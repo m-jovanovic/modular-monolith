@@ -72,7 +72,7 @@ public sealed class LoanLifecycleTests(LendingFixture fixture)
         Assert.Equal(HttpStatusCode.Conflict, renewal.StatusCode);
     }
 
-    private static async Task<Guid> CollectAsync(HttpClient staff, HttpClient borrower, Guid copyId)
+    internal static async Task<Guid> CollectAsync(HttpClient staff, HttpClient borrower, Guid copyId)
     {
         using HttpResponseMessage held = await borrower.PostAsJsonAsync("/api/lending/holds", new { copyId });
         Assert.Equal(HttpStatusCode.Created, held.StatusCode);
