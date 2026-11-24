@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using EquipmentLibrary.Lending.Domain;
 using EquipmentLibrary.Lending.IntegrationEvents;
-using EquipmentLibrary.Lending.Loans;
 using EquipmentLibrary.Lending.Persistence;
 using Microsoft.AspNetCore.Http;
 using Npgsql;
@@ -66,7 +65,7 @@ internal static class CloseHold
         {
             await using NpgsqlCommand loan = connection.Sql("""
                 INSERT INTO lending.loans (id, copy_id, borrower_id, checked_out_at, due_at) VALUES ($1, $2, $3, $4, $5)
-                """, holdId, snapshot.CopyId, hold.BorrowerId, now, now + LoanPolicy.LoanPeriod);
+                """, holdId, snapshot.CopyId, hold.BorrowerId, now, Loan.DueAfter(now));
             await loan.ExecuteNonQueryAsync(cancellationToken);
         }
 
