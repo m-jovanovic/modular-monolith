@@ -35,7 +35,9 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
         int[] counts = await Task.WhenAll(SweepAsync(staff), SweepAsync(staff));
         using HttpResponseMessage collection = await competingCollection;
         Assert.Equal(HttpStatusCode.Conflict, collection.StatusCode);
-        Assert.Equal(1, counts.Sum());
+        // Both SKIP LOCKED sweeps can run while the collector holds the row.
+        int expiredAfterCollection = await SweepAsync(staff);
+        Assert.Equal(1, counts.Sum() + expiredAfterCollection);
         Assert.Equal(0, await SweepAsync(staff));
 
         using HttpResponseMessage hold = await member.GetAsync($"/api/lending/holds/{holdId}");
@@ -108,6 +110,10 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
         Assert.Equal("pickup-window-closed", (await ReservationTests.Json(result)).GetProperty("code").GetString());
         using HttpResponseMessage loan = await member.GetAsync($"/api/lending/loans/{holdId}");
         Assert.Equal(HttpStatusCode.NotFound, loan.StatusCode);
+
+        // This deadline uses a historical clock in the shared database. Leave no hold for another sweep.
+        using HttpResponseMessage cancelled = await member.PostAsync($"/api/lending/holds/{holdId}/cancel", null);
+        Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
     }
 
     [Fact]

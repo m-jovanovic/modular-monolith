@@ -30,6 +30,24 @@ public sealed class PickupFixture : IAsyncLifetime
     internal IPickupInbox Inbox => _app.Services.GetRequiredService<IPickupInbox>();
     internal ProcessPickupInbox Worker => _app.Services.GetRequiredService<ProcessPickupInbox>();
 
+    internal ProcessPickupInbox WorkerAt(DateTimeOffset instant) =>
+        ActivatorUtilities.CreateInstance<ProcessPickupInbox>(_app.Services, new FixedClock(instant));
+
+    internal async Task<DateTimeOffset> AvailableAtAsync(Guid messageId)
+    {
+        await using NpgsqlCommand command = _admin.CreateCommand("""
+            SELECT available_at FROM pickup_desk.inbox WHERE subscriber_id = $1 AND message_id = $2
+            """);
+        command.Parameters.AddWithValue(PickupInbox.Subscriber);
+        command.Parameters.AddWithValue(messageId);
+        return (DateTime)(await command.ExecuteScalarAsync())!;
+    }
+
+    private sealed class FixedClock(DateTimeOffset instant) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => instant;
+    }
+
     public async Task InitializeAsync()
     {
         string? adminConnection = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN");
