@@ -8,6 +8,7 @@ createdb equipment_empty
 
 # The first migration in each module is the oldest database shape supported by this reference.
 prior=$(mktemp -d)
+trap 'rm -rf -- "$prior"' EXIT
 mkdir -p "$prior/infra"
 cp -R infra/postgres "$prior/infra/"
 for module in Catalog Lending PickupDesk; do
@@ -41,11 +42,11 @@ test "$(PGDATABASE=equipment_empty psql -XAtq -c 'SELECT count(*) FROM catalog.i
 echo "Validated empty and upgraded databases, preserved prior rows and replayed $ledger migration entries."
 
 denied() {
-    if psql -Xq -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -c "$1" > /tmp/permission-result 2>&1; then
+    if psql -Xq -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -c "$1" > "$prior/permission-result" 2>&1; then
         echo "$PGUSER unexpectedly executed: $1" >&2
         exit 1
     fi
-    grep -q '42501:' /tmp/permission-result || { cat /tmp/permission-result >&2; exit 1; }
+    grep -q '42501:' "$prior/permission-result" || { cat "$prior/permission-result" >&2; exit 1; }
 }
 
 for schema in catalog lending pickup_desk; do
@@ -83,9 +84,9 @@ done
 
 export PGUSER=postgres PGPASSWORD=fixture-only
 echo '-- changed historical migration' >> "$prior/src/Modules/Catalog/Migrations/001_items.sql"
-if "$prior/infra/postgres/migrate.sh" >/tmp/checksum-result 2>&1; then
+if "$prior/infra/postgres/migrate.sh" >"$prior/checksum-result" 2>&1; then
     echo 'Expected historical migration mutation to fail' >&2
     exit 1
 fi
-grep -q 'Previously applied migration has changed' /tmp/checksum-result
+grep -q 'Previously applied migration has changed' "$prior/checksum-result"
 echo 'Previously applied migration edits are rejected.'
