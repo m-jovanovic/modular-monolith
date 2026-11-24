@@ -11,10 +11,10 @@ public static class DeliveryOperations
 {
     public static void MapDeliveryOperations(this IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder delivery = endpoints.MapGroup("/api/lending/delivery").RequireAuthorization("Pickup.Operate");
-        delivery.MapGet("/status", GetStatusAsync);
-        delivery.MapGet("/quarantine", ListQuarantinedAsync);
-        delivery.MapPost("/quarantine/{messageId:guid}/redrive", RedriveAsync);
+        RouteGroupBuilder delivery = endpoints.MapGroup("/api/lending/delivery").WithTags("Lending delivery").RequireAuthorization("Pickup.Operate");
+        delivery.MapGet("/status", GetStatusAsync).WithName("GetDeliveryStatus");
+        delivery.MapGet("/quarantine", ListQuarantinedAsync).WithName("ListQuarantinedDeliveries");
+        delivery.MapPost("/quarantine/{messageId:guid}/redrive", RedriveAsync).WithName("RedriveDelivery");
     }
 
     private static async Task<IResult> GetStatusAsync(

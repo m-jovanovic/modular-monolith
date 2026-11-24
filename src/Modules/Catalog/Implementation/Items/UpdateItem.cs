@@ -7,7 +7,7 @@ internal static class UpdateItem
     internal sealed record Request(string? Title, string? Description);
 
     internal static void MapEndpoint(RouteGroupBuilder items) =>
-        items.MapPut("/{itemId:guid}", Execute).RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapPut("/{itemId:guid}", Execute).WithName("UpdateItem").RequireAuthorization(CatalogModule.ManagePolicy);
 
     private static async Task<IResult> Execute(Guid itemId, Request request, Handler handler, CancellationToken cancellationToken)
     {

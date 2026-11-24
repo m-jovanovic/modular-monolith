@@ -3,7 +3,7 @@ namespace EquipmentLibrary.Catalog.Categories;
 internal static class GetItemCategories
 {
     internal static void MapEndpoint(RouteGroupBuilder items) =>
-        items.MapGet("/{itemId:guid}/categories", Execute).AllowAnonymous();
+        items.MapGet("/{itemId:guid}/categories", Execute).WithName("GetItemCategories").AllowAnonymous();
 
     private static async Task<IResult> Execute(Guid itemId, Handler handler, CancellationToken cancellationToken)
     {

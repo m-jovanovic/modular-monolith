@@ -19,12 +19,14 @@ internal static class MaintenanceEndpoints
         lending.MapPost("/copies/{copyId:guid}/maintenance", OpenAsync).RequireAuthorization("Lending.Enroll")
             .WithName("OpenMaintenanceOrder").Produces<MaintenanceOrder>(201);
         RouteGroupBuilder orders = lending.MapGroup("/maintenance").RequireAuthorization("Lending.Enroll");
-        orders.MapGet("", ListOpenAsync);
-        orders.MapGet("/{orderId:guid}", GetAsync).Produces<MaintenanceOrder>();
+        orders.MapGet("", ListOpenAsync).WithName("ListOpenMaintenanceOrders");
+        orders.MapGet("/{orderId:guid}", GetAsync).WithName("GetMaintenanceOrder").Produces<MaintenanceOrder>();
         orders.MapPost("/{orderId:guid}/repair", (Guid orderId, CloseRequest request, MaintenanceOrderHandler handler,
-            CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Repair, handler, cancellationToken));
+            CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Repair, handler, cancellationToken))
+            .WithName("RepairCopy");
         orders.MapPost("/{orderId:guid}/withdraw", (Guid orderId, CloseRequest request, MaintenanceOrderHandler handler,
-            CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Withdraw, handler, cancellationToken));
+            CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Withdraw, handler, cancellationToken))
+            .WithName("WithdrawDamagedCopy");
     }
 
     private static async Task<IResult> OpenAsync(Guid copyId, OpenRequest request, MaintenanceOrderHandler handler,

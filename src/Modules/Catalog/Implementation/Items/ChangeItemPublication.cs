@@ -4,8 +4,8 @@ internal static class ChangeItemPublication
 {
     internal static void MapEndpoints(RouteGroupBuilder items)
     {
-        items.MapPost("/{itemId:guid}/archive", Archive).RequireAuthorization(CatalogModule.ManagePolicy);
-        items.MapPost("/{itemId:guid}/restore", Restore).RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapPost("/{itemId:guid}/archive", Archive).WithName("ArchiveItem").RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapPost("/{itemId:guid}/restore", Restore).WithName("RestoreItem").RequireAuthorization(CatalogModule.ManagePolicy);
     }
 
     private static Task<IResult> Archive(Guid itemId, Handler handler, CancellationToken cancellationToken) =>

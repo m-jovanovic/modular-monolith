@@ -25,13 +25,13 @@ public static class CatalogModule
 
     public static IEndpointRouteBuilder MapCatalog(this IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder items = endpoints.MapGroup("/api/catalog/items");
+        RouteGroupBuilder items = endpoints.MapGroup("/api/catalog/items").WithTags("Catalog");
         CreateItem.MapEndpoint(items);
         GetItem.MapEndpoint(items);
         UpdateItem.MapEndpoint(items);
         SearchItems.MapEndpoints(items);
         ChangeItemPublication.MapEndpoints(items);
-        RouteGroupBuilder categories = endpoints.MapGroup("/api/catalog/categories");
+        RouteGroupBuilder categories = endpoints.MapGroup("/api/catalog/categories").WithTags("Catalog");
         CreateCategory.MapEndpoint(categories);
         BrowseCategories.MapEndpoints(categories);
         ClassifyItem.MapEndpoints(items);

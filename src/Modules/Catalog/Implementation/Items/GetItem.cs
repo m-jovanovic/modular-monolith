@@ -5,7 +5,7 @@ namespace EquipmentLibrary.Catalog.Items;
 internal static class GetItem
 {
     internal static void MapEndpoint(RouteGroupBuilder items) =>
-        items.MapGet("/{itemId:guid}", Execute).AllowAnonymous();
+        items.MapGet("/{itemId:guid}", Execute).WithName("GetItem").AllowAnonymous();
 
     private static async Task<IResult> Execute(Guid itemId, ICatalogLookup catalog, CancellationToken cancellationToken)
     {

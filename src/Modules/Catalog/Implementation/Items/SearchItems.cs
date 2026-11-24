@@ -7,8 +7,8 @@ internal static class SearchItems
 {
     internal static void MapEndpoints(RouteGroupBuilder items)
     {
-        items.MapGet("/", Search).AllowAnonymous();
-        items.MapGet("/archived", SearchArchive).RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapGet("/", Search).WithName("SearchItems").AllowAnonymous();
+        items.MapGet("/archived", SearchArchive).WithName("SearchArchivedItems").RequireAuthorization(CatalogModule.ManagePolicy);
     }
 
     private static Task<IResult> Search(string? q, Guid? categoryId, int? page, int? pageSize, Handler handler, CancellationToken cancellationToken) =>
