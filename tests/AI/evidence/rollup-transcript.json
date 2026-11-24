@@ -1,5 +1,5 @@
 {
-  "selection": "Agent messages and selected public-repository read/verification commands in session order. Absolute checkout prefixes are removed. Command output and internal tool metadata are omitted.",
+  "selection": "Agent messages and selected public-repository read/verification commands in session order. Absolute checkout prefixes are removed. The temporary patch link points to the captured diff. Command output and internal tool metadata are omitted.",
   "events": [
     {
       "event": "agent_message",
@@ -55,7 +55,7 @@
     },
     {
       "event": "agent_message",
-      "text": "Implemented [HoldRollup.cs](src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs) and added [HoldRollupTests.cs](tests/Modules/PickupDesk/HoldRollupTests.cs). The rollup reads the events once, keeps the highest-sequence snapshot per hold ID, and counts those in state `held`. Holds on the same copy are counted independently. [Download the two-file patch](/private/tmp/hold-rollup-tests.4m4jgx/hold-rollup.patch).\n\nAll four new test cases passed when invoked directly. Replaying a placement after its cancellation exposed the regression in an arrival-order implementation: it returned `1`; the patched rollup returned `0`.\n\n- `./scripts/verify.sh tests/Modules/PickupDesk/EquipmentLibrary.PickupDesk.Tests.csproj` and `./scripts/verify.sh` both built with zero warnings and errors. The sandbox denied VSTest’s local socket, so the standard test suites could not start.\n- `./scripts/check-analyzers.sh` passed and confirmed the expected `CA2200` diagnostic."
+      "text": "Implemented [HoldRollup.cs](src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs) and added [HoldRollupTests.cs](tests/Modules/PickupDesk/HoldRollupTests.cs). The rollup reads the events once, keeps the highest-sequence snapshot per hold ID, and counts those in state `held`. Holds on the same copy are counted independently. [Download the two-file patch](../solutions/rollup.patch).\n\nAll four new test cases passed when invoked directly. Replaying a placement after its cancellation exposed the regression in an arrival-order implementation: it returned `1`; the patched rollup returned `0`.\n\n- `./scripts/verify.sh tests/Modules/PickupDesk/EquipmentLibrary.PickupDesk.Tests.csproj` and `./scripts/verify.sh` both built with zero warnings and errors. The sandbox denied VSTest’s local socket, so the standard test suites could not start.\n- `./scripts/check-analyzers.sh` passed and confirmed the expected `CA2200` diagnostic."
     }
   ]
 }
