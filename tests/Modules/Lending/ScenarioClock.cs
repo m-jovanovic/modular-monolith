@@ -2,7 +2,26 @@ namespace EquipmentLibrary.Lending.Tests;
 
 internal sealed class ScenarioClock : TimeProvider
 {
+    private readonly TaskCompletionSource<ITimer> _expiryTimer = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private long _utcTicks;
+
+    public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+    {
+        if (period != TimeSpan.FromMinutes(1))
+        {
+            return base.CreateTimer(callback, state, dueTime, period);
+        }
+
+        ITimer timer = base.CreateTimer(callback, state, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _expiryTimer.SetResult(timer);
+        return timer;
+    }
+
+    public async Task TickWorkerAsync()
+    {
+        ITimer timer = await _expiryTimer.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        timer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+    }
 
     public override DateTimeOffset GetUtcNow()
     {

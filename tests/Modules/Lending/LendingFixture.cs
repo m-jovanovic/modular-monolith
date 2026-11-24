@@ -67,7 +67,7 @@ public sealed class LendingFixture : IAsyncLifetime
         builder.Services.AddKeyedSingleton("Lending", (_, _) => NpgsqlDataSource.Create(runtime.ConnectionString));
         builder.Services.AddSingleton<TimeProvider>(Clock);
         builder.Services.AddSingleton<ICatalogLookup, KnownCatalog>();
-        builder.Services.AddLending(runExpiryWorker: false);
+        builder.Services.AddLending();
         builder.Services.AddAuthentication("Fixture").AddScheme<AuthenticationSchemeOptions, FixtureIdentity>("Fixture", _ => { });
         builder.Services.AddAuthorization(options =>
         {

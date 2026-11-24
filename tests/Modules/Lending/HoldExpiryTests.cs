@@ -76,17 +76,40 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
     }
 
     [Fact]
+    public async Task HostedWorkerReleasesAnExpiredHoldWhenItsClockTicks()
+    {
+        using HttpClient staff = fixture.Client("staff");
+        using HttpClient member = fixture.Client("a");
+        fixture.Clock.Set(new DateTimeOffset(2017, 9, 9, 12, 0, 0, TimeSpan.Zero));
+        (Guid holdId, _, DateTimeOffset deadline) = await PlaceAsync(staff, member);
+        fixture.Clock.Set(deadline);
+        await fixture.Clock.TickWorkerAsync();
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (true)
+        {
+            using HttpResponseMessage response = await member.GetAsync($"/api/lending/holds/{holdId}", timeout.Token);
+            if ((await ReservationTests.Json(response)).GetProperty("expired").GetBoolean())
+            {
+                break;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(20), timeout.Token);
+        }
+    }
+
+    [Fact]
     public async Task SweepSkipsLockedRowsAndRespectsTheRequestedBatchLimit()
     {
         using HttpClient staff = fixture.Client("staff");
         using HttpClient member = fixture.Client("b");
         var start = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
         fixture.Clock.Set(start);
-        var oldest = await PlaceAsync(staff, member);
+        (Guid HoldId, Guid CopyId, DateTimeOffset Deadline) oldest = await PlaceAsync(staff, member);
         fixture.Clock.Set(start.AddMinutes(1));
-        var second = await PlaceAsync(staff, member);
+        (Guid HoldId, Guid CopyId, DateTimeOffset Deadline) second = await PlaceAsync(staff, member);
         fixture.Clock.Set(start.AddMinutes(2));
-        var third = await PlaceAsync(staff, member);
+        (Guid HoldId, Guid CopyId, DateTimeOffset Deadline) third = await PlaceAsync(staff, member);
         fixture.Clock.Set(third.Deadline);
         await using NpgsqlConnection connection = await fixture.Admin.OpenConnectionAsync();
         await using NpgsqlTransaction heldLock = await connection.BeginTransactionAsync();
