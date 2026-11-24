@@ -6,6 +6,8 @@ namespace EquipmentLibrary.PickupDesk.Features;
 
 internal static class GetDeskWorkload
 {
+    internal sealed record Workload(long Unclaimed, long InPreparation, long Blocked, long Ready, DateTime? OldestHoldAt);
+
     internal static async Task<IResult> HandleAsync([FromKeyedServices("PickupDesk")] NpgsqlDataSource database, CancellationToken token)
     {
         await using NpgsqlCommand query = database.CreateCommand("""
@@ -17,11 +19,8 @@ internal static class GetDeskWorkload
             """);
         await using NpgsqlDataReader row = await query.ExecuteReaderAsync(token);
         await row.ReadAsync(token);
-        return Results.Ok(new
-        {
-            unclaimed = row.GetInt64(0), inPreparation = row.GetInt64(1),
-            blocked = row.GetInt64(2), ready = row.GetInt64(3),
-            oldestHoldAt = row.IsDBNull(4) ? (DateTime?)null : row.GetDateTime(4)
-        });
+        return Results.Ok(new Workload(
+            row.GetInt64(0), row.GetInt64(1), row.GetInt64(2), row.GetInt64(3),
+            row.IsDBNull(4) ? null : row.GetDateTime(4)));
     }
 }

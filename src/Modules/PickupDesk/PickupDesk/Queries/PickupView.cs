@@ -2,6 +2,8 @@ using Npgsql;
 
 namespace EquipmentLibrary.PickupDesk.Queries;
 
+internal sealed record PickupList(IReadOnlyList<PickupView> Items);
+
 internal sealed record PickupView(
     Guid HoldId, Guid CopyId, Guid CatalogItemId, string Barcode, string? ItemTitle,
     string State, DateTime OccurredAt, Guid? AssignedTo, DateTime? ReadyAt, string? Issue)
