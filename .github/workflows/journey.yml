@@ -5,6 +5,8 @@ on:
     branches: [main]
 permissions:
   contents: read
+env:
+  COMPOSE_PROJECT_NAME: eqlab-ci
 jobs:
   journey:
     runs-on: ubuntu-latest
@@ -17,6 +19,8 @@ jobs:
         run: docker compose up -d --build --wait --wait-timeout 120
       - name: Race two borrowers and complete the staff workflow
         run: python3 tests/Journeys/borrow_a_drill.py
+      - name: Kill the host after durable receipt and verify recovery
+        run: python3 tests/Journeys/recover_delivery.py
       - name: Collect diagnostics
         if: failure()
         run: docker compose logs --no-color --tail 150
