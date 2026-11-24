@@ -13,6 +13,7 @@ public static class CatalogModule
         services.AddScoped<ICatalogLookup, CatalogLookup>();
         services.AddScoped<CreateItem.Handler>();
         services.AddScoped<UpdateItem.Handler>();
+        services.AddScoped<SearchItems.Handler>();
         return services;
     }
 
@@ -22,6 +23,7 @@ public static class CatalogModule
         CreateItem.MapEndpoint(items);
         GetItem.MapEndpoint(items);
         UpdateItem.MapEndpoint(items);
+        SearchItems.MapEndpoint(items);
         return endpoints;
     }
 }

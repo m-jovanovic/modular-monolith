@@ -23,6 +23,25 @@ public sealed class CatalogItemTests(CatalogFixture app) : IClassFixture<Catalog
     }
 
     [Fact]
+    public async Task ReadersSearchLiteralTextInStablePages()
+    {
+        string term = $"tool%{Guid.NewGuid():N}";
+        foreach (string title in new[] { "Plane B", "Plane A", "Plane C" })
+        {
+            using HttpResponseMessage created = await app.Staff.PostAsJsonAsync(Items, new { title, description = term });
+            created.EnsureSuccessStatusCode();
+        }
+
+        string page = $"{Items}?q={Uri.EscapeDataString(term.ToUpperInvariant())}&pageSize=2";
+        CatalogItemDescription[]? first = await app.Public.GetFromJsonAsync<CatalogItemDescription[]>(page);
+        CatalogItemDescription[]? second = await app.Public.GetFromJsonAsync<CatalogItemDescription[]>(page + "&page=2");
+        Assert.Equal(["Plane A", "Plane B"], first!.Select(item => item.Title));
+        Assert.Equal("Plane C", Assert.Single(second!).Title);
+        using HttpResponseMessage invalid = await app.Public.GetAsync($"{Items}?pageSize=0");
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+    }
+
+    [Fact]
     public async Task CorrectingADescriptionPreservesTheCatalogIdentity()
     {
         using HttpResponseMessage created = await app.Staff.PostAsJsonAsync(Items, new { title = "Sander", description = "Old description." });
