@@ -26,12 +26,12 @@ public sealed class FanoutFixture : LendingFixture
         await using NpgsqlCommand create = Admin.CreateCommand("""
             CREATE SCHEMA receiver_test;
             ALTER TABLE lending.outbox ADD COLUMN fixture_failed_at timestamptz;
-            CREATE FUNCTION receiver_test.record_failure_time() RETURNS trigger LANGUAGE plpgsql AS $
+            CREATE FUNCTION receiver_test.record_failure_time() RETURNS trigger LANGUAGE plpgsql AS $capture$
             BEGIN
                 NEW.fixture_failed_at = transaction_timestamp();
                 RETURN NEW;
             END;
-            $;
+            $capture$;
             CREATE TRIGGER record_failure_time BEFORE UPDATE OF failure_count ON lending.outbox
                 FOR EACH ROW WHEN (NEW.failure_count > OLD.failure_count)
                 EXECUTE FUNCTION receiver_test.record_failure_time();
