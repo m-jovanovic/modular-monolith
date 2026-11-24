@@ -8,13 +8,13 @@ Install the .NET 10 SDK pinned in [global.json](global.json). From the repositor
 
 ```sh
 ./scripts/verify.sh
-dotnet run --project src/Api/EquipmentLibrary.Api.csproj --no-launch-profile -- --urls http://127.0.0.1:5080
+dotnet run --project src/Api/EquipmentLibrary.Api.csproj --no-launch-profile -- --urls http://127.0.0.1:5284
 ```
 
-In another terminal, check the host.
+In another terminal, check the host. If port 5284 is in use, choose an available port in both commands.
 
 ```sh
-curl --fail http://127.0.0.1:5080/health
+curl --fail http://127.0.0.1:5284/health
 # Healthy
 ```
 
