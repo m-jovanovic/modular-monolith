@@ -29,6 +29,6 @@ internal static class GetCopyHistory
         List<Entry> items = await history.ReadListAsync(r => new Entry(r.GetGuid(0), r.GetString(1),
             r.GetFieldValue<DateTimeOffset>(2), r.IsDBNull(3) ? null : r.GetFieldValue<DateTimeOffset>(3),
             r.IsDBNull(4) ? null : r.GetFieldValue<DateTimeOffset>(4)), cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<Entry>(items));
     }
 }

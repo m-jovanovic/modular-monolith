@@ -35,10 +35,7 @@ public static class LendingModule
     public static IEndpointRouteBuilder MapLending(this IEndpointRouteBuilder endpoints)
     {
         RouteGroupBuilder lending = endpoints.MapGroup("/api/lending").WithTags("Lending");
-        lending.MapPost("/copies", EnrollCopy.HandleAsync).WithName("EnrollCopy").RequireAuthorization("Lending.Enroll");
-        lending.MapGet("/copies/{copyId:guid}", GetCopy.HandleAsync).WithName("GetCopy");
-        lending.MapGet("/copies", FindCopies.HandleAsync).WithName("FindCopies");
-        lending.MapGet("/availability/{catalogItemId:guid}", GetAvailability.HandleAsync).WithName("GetAvailability");
+        lending.MapCopies();
         lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower")
             .WithName("PlaceHold").Produces<Holds.HoldView>(StatusCodes.Status201Created)
             .ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
@@ -49,9 +46,6 @@ public static class LendingModule
         lending.MapPost("/holds/{holdId:guid}/collect", Holds.CloseHold.CollectAsync).WithName("CollectHold").RequireAuthorization("Pickup.Manage");
         lending.MapPost("/loans/{loanId:guid}/return", Loans.ReturnLoan.HandleAsync).WithName("ReturnLoan").RequireAuthorization("Pickup.Manage");
         lending.MapPost("/loans/{loanId:guid}/renew", Loans.RenewLoan.HandleAsync).WithName("RenewLoan").RequireAuthorization("Borrower");
-        lending.MapPost("/copies/{copyId:guid}/retire", ChangeCirculation.RetireAsync).WithName("RetireCopy").RequireAuthorization("Lending.Enroll");
-        lending.MapPost("/copies/{copyId:guid}/reinstate", ChangeCirculation.ReinstateAsync).WithName("ReinstateCopy").RequireAuthorization("Lending.Enroll");
-        lending.MapGet("/copies/{copyId:guid}/history", GetCopyHistory.HandleAsync).WithName("GetCopyHistory").RequireAuthorization("Pickup.Manage");
         lending.MapGet("/loans/{loanId:guid}", Loans.GetLoan.HandleAsync).WithName("GetLoan").RequireAuthorization();
         lending.MapGet("/me/loans", Loans.ListMyLoans.HandleAsync).WithName("ListMyLoans").RequireAuthorization("Borrower");
         lending.MapGet("/loans/overdue", Loans.ListOverdueLoans.HandleAsync).WithName("ListOverdueLoans").RequireAuthorization("Pickup.Manage");
