@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using EquipmentLibrary.Lending.Delivery;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Xunit;
 
@@ -25,6 +26,27 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
         Assert.Equal((2L, 1L, 1), await ReadEffectsAsync(fixture.Circulation.Name, hold, message));
         Assert.Equal((2L, 1L, 1), await ReadEffectsAsync(fixture.Inventory.Name, hold, message));
         await AssertClosedAsync(message, expectedFailures: 1);
+    }
+
+    [Fact]
+    public async Task ANewReceiverCannotSubscribeRetroactivelyToACommittedHold()
+    {
+        (Guid hold, Guid message) = await ReserveAsync();
+        var newcomer = new DurableReceiver("waiting-list.v1", fixture.Admin);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddKeyedSingleton("Lending", fixture.Services.GetRequiredKeyedService<NpgsqlDataSource>("Lending"));
+        services.AddSingleton<IHoldSubscriber>(newcomer);
+        services.AddSingleton<IHoldSubscriber>(fixture.Inventory);
+        services.AddSingleton<IHoldSubscriber>(fixture.Circulation);
+        services.AddHoldDelivery(runWorker: false);
+        await using ServiceProvider nextDeployment = services.BuildServiceProvider();
+
+        IHoldDispatcher dispatcher = nextDeployment.GetRequiredService<IHoldDispatcher>();
+        Assert.Equal(HoldDispatchOutcome.Delivered, await dispatcher.DeliverNextAsync(default));
+        Assert.Equal((1L, 1L, 1), await ReadEffectsAsync(fixture.Circulation.Name, hold, message));
+        Assert.Equal((1L, 1L, 1), await ReadEffectsAsync(fixture.Inventory.Name, hold, message));
+        Assert.Equal((0L, 0L, 0), await ReadEffectsAsync(newcomer.Name, hold, message));
     }
 
     [Theory]
