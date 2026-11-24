@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -12,6 +13,40 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
         fixture.ExecuteAsync("TRUNCATE pickup_desk.holds, pickup_desk.inbox, pickup_desk.redrives");
 
     public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task ConsumerSpanRetainsTheFirstReceiptParentAcrossRedelivery()
+    {
+        HoldLifecycleEvent held = Place();
+        ActivityContext producer;
+        using (Activity original = new Activity("dispatch").SetIdFormat(ActivityIdFormat.W3C).Start())
+        {
+            producer = original.Context;
+            await fixture.Inbox.AcceptAsync(held, default);
+        }
+
+        using (Activity duplicate = new Activity("redelivery").SetIdFormat(ActivityIdFormat.W3C).Start())
+        {
+            await fixture.Inbox.AcceptAsync(held, default);
+        }
+
+        Activity? observed = null;
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "EquipmentLibrary.PickupDesk.Inbox",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity => observed = activity
+        };
+        ActivitySource.AddActivityListener(listener);
+        Assert.True(await fixture.Worker.ProcessNextAsync(default));
+        Assert.NotNull(observed);
+        Assert.Equal(ActivityKind.Consumer, observed.Kind);
+        Assert.Equal(producer.TraceId, observed.TraceId);
+        Assert.Equal(producer.SpanId, observed.ParentSpanId);
+        Assert.Equal(held.Data.HoldId.ToString(), observed.GetTagItem("library.hold.id"));
+        Assert.Equal(held.MessageId.ToString(), observed.GetTagItem("messaging.message.id"));
+        Assert.Equal("completed", observed.GetTagItem("library.delivery.outcome"));
+    }
 
     [Fact]
     public async Task RepeatedDeliveryAndConcurrentWorkersProduceOnePendingPickup()
@@ -116,6 +151,20 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
     public async Task FailedCompletionRollsBackProjectionAndOperatorCanRecoverTheOriginalReceipt()
     {
         HoldLifecycleEvent held = Place();
+        var outcomes = new List<(string? Outcome, ActivityStatusCode Status)>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "EquipmentLibrary.PickupDesk.Inbox",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                if (Equals(held.MessageId.ToString(), activity.GetTagItem("messaging.message.id")))
+                {
+                    outcomes.Add((activity.GetTagItem("library.delivery.outcome") as string, activity.Status));
+                }
+            }
+        };
+        ActivitySource.AddActivityListener(listener);
         await fixture.Inbox.AcceptAsync(held, default);
         await fixture.ExecuteAsync("""
             CREATE FUNCTION pickup_desk.fail_completion() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -147,6 +196,10 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
         Assert.True(await fixture.Worker.ProcessNextAsync(default));
         await fixture.Inbox.AcceptAsync(held, default);
         Assert.False(await fixture.Worker.ProcessNextAsync(default));
+        Assert.Equal(6, outcomes.Count);
+        Assert.All(outcomes.Take(4), retry => Assert.Equal(("retry", ActivityStatusCode.Error), retry));
+        Assert.Equal(("quarantined", ActivityStatusCode.Error), outcomes[4]);
+        Assert.Equal(("completed", ActivityStatusCode.Unset), outcomes[5]);
         Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.holds WHERE hold_state = 'held'"));
         Assert.Equal(1, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.inbox WHERE completed_at IS NOT NULL"));
     }

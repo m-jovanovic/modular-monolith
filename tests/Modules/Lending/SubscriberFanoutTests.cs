@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using EquipmentLibrary.Lending.Delivery;
@@ -9,6 +10,33 @@ namespace EquipmentLibrary.Lending.Tests;
 
 public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture<FanoutFixture>
 {
+    [Fact]
+    public async Task DispatchSpanLinksTheHttpTraceToTheStableHoldAndMessageIds()
+    {
+        var trace = ActivityTraceId.CreateRandom();
+        Activity? observed = null;
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name is "EquipmentLibrary.Lending.Outbox" or "Microsoft.AspNetCore",
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = activity =>
+            {
+                if (activity.Source.Name == "EquipmentLibrary.Lending.Outbox" && activity.TraceId == trace)
+                {
+                    observed = activity;
+                }
+            }
+        };
+        ActivitySource.AddActivityListener(listener);
+        (Guid hold, Guid message) = await ReserveAsync($"00-{trace}-{ActivitySpanId.CreateRandom()}-01");
+        Assert.Equal(HoldDispatchOutcome.Delivered, await fixture.Dispatcher.DeliverNextAsync(default));
+        Assert.NotNull(observed);
+        Assert.Equal(ActivityKind.Producer, observed.Kind);
+        Assert.Equal(hold.ToString(), observed.GetTagItem("library.hold.id"));
+        Assert.Equal(message.ToString(), observed.GetTagItem("messaging.message.id"));
+        Assert.Equal("acknowledged", observed.GetTagItem("library.delivery.outcome"));
+    }
+
     [Fact]
     public async Task AFailedSecondSubscriberRetriesTheOriginalMessageAndBothEffectsHappenOnce()
     {
@@ -85,10 +113,15 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
         await AssertClosedAsync(message, expectedFailures: 0);
     }
 
-    private async Task<(Guid Hold, Guid Message)> ReserveAsync()
+    private async Task<(Guid Hold, Guid Message)> ReserveAsync(string? traceParent = null)
     {
         using HttpClient staff = fixture.Client("staff");
         using HttpClient borrower = fixture.Client("a");
+        if (traceParent is not null)
+        {
+            borrower.DefaultRequestHeaders.Add("traceparent", traceParent);
+        }
+
         Guid copyId = await ReservationTests.EnrollAsync(staff);
         using HttpResponseMessage response = await borrower.PostAsJsonAsync("/api/lending/holds", new { copyId });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

@@ -13,8 +13,10 @@ class Library:
     def __init__(self, base):
         self.base = base.rstrip("/")
 
-    def request(self, method, path, actor=None, body=None, expected=(200,)):
+    def request(self, method, path, actor=None, body=None, expected=(200,), traceparent=None):
         headers = {"Accept": "application/json"}
+        if traceparent:
+            headers["traceparent"] = traceparent
         if actor:
             headers["Authorization"] = f"Bearer demo-{actor}"
         if body is not None:

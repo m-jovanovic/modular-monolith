@@ -1,21 +1,29 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Text;
 using System.Text.Json;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace EquipmentLibrary.PickupDesk.Inbox;
 
-internal sealed class ProcessPickupInbox(
+internal sealed partial class ProcessPickupInbox(
     [FromKeyedServices("PickupDesk")] NpgsqlDataSource database,
-    TimeProvider clock)
+    TimeProvider clock,
+    ILogger<ProcessPickupInbox> logger)
 {
+    private static readonly ActivitySource Activities = new("EquipmentLibrary.PickupDesk.Inbox");
+    private static readonly Meter Meter = new("EquipmentLibrary.PickupDesk.Inbox");
+    private static readonly Counter<long> Receipts = Meter.CreateCounter<long>("equipment_library.inbox.receipts");
+
     public async Task<bool> ProcessNextAsync(CancellationToken token)
     {
         await using NpgsqlConnection connection = await database.OpenConnectionAsync(token);
         await using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(token);
         await using var claim = new NpgsqlCommand("""
-            SELECT message_id, payload::text, attempts FROM pickup_desk.inbox
+            SELECT message_id, payload::text, attempts, trace_parent FROM pickup_desk.inbox
             WHERE subscriber_id = $1 AND completed_at IS NULL AND quarantined_at IS NULL AND available_at <= $2
             ORDER BY available_at, received_at, message_id LIMIT 1 FOR UPDATE SKIP LOCKED
             """, connection, transaction);
@@ -25,6 +33,7 @@ internal sealed class ProcessPickupInbox(
         Guid id;
         string payload;
         int attempts;
+        string? traceParent;
         await using (NpgsqlDataReader row = await claim.ExecuteReaderAsync(token))
         {
             if (!await row.ReadAsync(token))
@@ -35,12 +44,23 @@ internal sealed class ProcessPickupInbox(
             id = row.GetGuid(0);
             payload = row.GetString(1);
             attempts = row.GetInt32(2) + 1;
+            traceParent = row.IsDBNull(3) ? null : row.GetString(3);
         }
 
+        ActivityContext.TryParse(traceParent, null, isRemote: true, out ActivityContext parent);
+        using Activity? activity = Activities.StartActivity("process hold receipt", ActivityKind.Consumer, parent);
+        activity?.SetTag("messaging.operation.type", "process");
+        activity?.SetTag("messaging.message.id", id.ToString());
+        activity?.SetTag("messaging.destination.name", PickupInbox.Subscriber);
+        activity?.SetTag("library.delivery.outcome", "uncommitted");
+        Guid? holdId = null;
+        string outcome = "completed";
         await transaction.SaveAsync("before_apply", token);
         try
         {
             HoldLifecycleEvent message = HoldEventWire.Read(Encoding.UTF8.GetBytes(payload));
+            holdId = message.Data.HoldId;
+            activity?.SetTag("library.hold.id", message.Data.HoldId.ToString());
             if (id != message.MessageId)
             {
                 throw new InvalidDataException("The stored receipt ID differs from the event ID.");
@@ -60,6 +80,9 @@ internal sealed class ProcessPickupInbox(
         {
             await transaction.RollbackAsync("before_apply", token);
             bool quarantine = attempts >= 5 || ex is JsonException or InvalidDataException;
+            outcome = quarantine ? "quarantined" : "retry";
+            activity?.SetStatus(ActivityStatusCode.Error);
+            activity?.SetTag("error.type", ex.GetType().Name);
             await using var fail = new NpgsqlCommand("""
                 UPDATE pickup_desk.inbox SET attempts = $3, failure = $4, available_at = $5,
                     quarantined_at = CASE WHEN $6 THEN $7 ELSE NULL END
@@ -77,6 +100,13 @@ internal sealed class ProcessPickupInbox(
         }
 
         await transaction.CommitAsync(token);
+        activity?.SetTag("library.delivery.outcome", outcome);
+        Receipts.Add(1, new KeyValuePair<string, object?>("outcome", outcome));
+        ActivityTraceId? traceId = activity?.TraceId ?? (parent.TraceId == default ? null : parent.TraceId);
+        Processed(logger, id, holdId, traceId, outcome, attempts);
         return true;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Pickup receipt {MessageId} for hold {HoldId} in trace {TraceId} finished with {Outcome} on attempt {Attempt}")]
+    private static partial void Processed(ILogger logger, Guid messageId, Guid? holdId, ActivityTraceId? traceId, string outcome, int attempt);
 }

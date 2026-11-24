@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using EquipmentLibrary.PickupDesk.Contracts;
@@ -15,13 +16,15 @@ internal sealed class PickupInbox([FromKeyedServices("PickupDesk")] NpgsqlDataSo
     {
         string payload = Encoding.UTF8.GetString(HoldEventWire.Write(message));
         await using NpgsqlCommand insert = database.CreateCommand("""
-            INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload)
-            VALUES ($1, $2, $3)
+            INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload, trace_parent)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (subscriber_id, message_id) DO NOTHING
             """);
         insert.Parameters.AddWithValue(Subscriber);
         insert.Parameters.AddWithValue(message.MessageId);
         insert.Parameters.AddWithValue(NpgsqlDbType.Jsonb, payload);
+        string? traceParent = Activity.Current is { IdFormat: ActivityIdFormat.W3C } activity ? activity.Id : null;
+        insert.Parameters.AddWithValue(NpgsqlDbType.Text, (object?)traceParent ?? DBNull.Value);
 
         if (await insert.ExecuteNonQueryAsync(cancellationToken) == 1)
         {
