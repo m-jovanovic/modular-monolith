@@ -102,10 +102,11 @@ internal sealed partial class ProcessPickupInbox(
         await transaction.CommitAsync(token);
         activity?.SetTag("library.delivery.outcome", outcome);
         Receipts.Add(1, new KeyValuePair<string, object?>("outcome", outcome));
-        string? traceId = activity?.TraceId.ToString() ?? (parent.TraceId == default ? null : parent.TraceId.ToString());
+        ActivityTraceId? traceId = activity?.TraceId ?? (parent.TraceId == default ? null : parent.TraceId);
         Processed(logger, id, holdId, traceId, outcome, attempts);
         return true;
     }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Pickup receipt {MessageId} for hold {HoldId} in trace {TraceId} finished with {Outcome} on attempt {Attempt}")]
-    private static partial void Processed(ILogger logger, Guid messageId, Guid? holdId, string? traceId, string outcome, int attempt);
+    private static partial void Processed(ILogger logger, Guid messageId, Guid? holdId, ActivityTraceId? traceId, string outcome, int attempt);
 }
