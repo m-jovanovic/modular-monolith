@@ -8,6 +8,7 @@ builder.AddLibraryModules();
 
 WebApplication app = builder.Build();
 app.UseExceptionHandler();
+app.UseStatusCodePages(ApiProblems.WriteAsync);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapApi();

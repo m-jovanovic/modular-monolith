@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
@@ -30,6 +32,11 @@ public sealed class AuthenticationTests
 
         using HttpResponseMessage response = await client.GetAsync(Queue);
         Assert.Equal(expected, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        JsonElement problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        string code = expected == HttpStatusCode.Unauthorized ? "authentication-required" : "forbidden";
+        Assert.Equal(code, problem.GetProperty("code").GetString());
+        Assert.Equal($"urn:equipment-library:problem:{code}", problem.GetProperty("type").GetString());
     }
 
     [Fact]
