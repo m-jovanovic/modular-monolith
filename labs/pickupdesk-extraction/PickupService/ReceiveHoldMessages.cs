@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using EquipmentLibrary.Lab.JetStream;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using EquipmentLibrary.PickupDesk.Contracts;
@@ -13,6 +14,10 @@ internal sealed class ReceiveHoldMessages(NatsJSContext jetStream, IPickupInbox 
         await foreach (NatsJSMsg<byte[]> message in consumer.ConsumeAsync<byte[]>(cancellationToken: stoppingToken))
         {
             HoldLifecycleEvent envelope = HoldEventWire.Read(message.Data ?? throw new InvalidDataException("Empty hold envelope."));
+            string? parent = message.Headers?["traceparent"].ToString();
+            using Activity? receipt = ActivityContext.TryParse(parent, null, isRemote: true, out _)
+                ? new Activity("receive broker hold").SetParentId(parent!).Start()
+                : null;
             await inbox.AcceptAsync(envelope, stoppingToken);
             await message.AckAsync(cancellationToken: stoppingToken);
         }
