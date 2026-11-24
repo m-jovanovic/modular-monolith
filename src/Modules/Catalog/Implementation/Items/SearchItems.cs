@@ -7,8 +7,16 @@ internal static class SearchItems
 {
     internal static void MapEndpoints(RouteGroupBuilder items)
     {
-        items.MapGet("/", Search).WithName("SearchItems").AllowAnonymous();
-        items.MapGet("/archived", SearchArchive).WithName("SearchArchivedItems").RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapGet("/", Search)
+            .WithName("SearchItems")
+            .AllowAnonymous()
+            .Produces<IReadOnlyList<CatalogItemDescription>>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        items.MapGet("/archived", SearchArchive)
+            .WithName("SearchArchivedItems")
+            .RequireAuthorization(CatalogModule.ManagePolicy)
+            .Produces<IReadOnlyList<CatalogItemDescription>>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static Task<IResult> Search(string? q, Guid? categoryId, int? page, int? pageSize, Handler handler, CancellationToken cancellationToken) =>
