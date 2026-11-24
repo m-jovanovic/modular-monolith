@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace EquipmentLibrary.Api.Bootstrap;
@@ -11,6 +12,11 @@ internal static class ApiDescription
         const string scheme = "LibraryBearer";
         services.AddOpenApi(options =>
         {
+            options.CreateSchemaReferenceId = type =>
+            {
+                string? id = OpenApiOptions.CreateDefaultSchemaReferenceId(type);
+                return id is not null && type.Type.DeclaringType is { } feature ? feature.Name + id : id;
+            };
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info.Title = "Equipment Library";
