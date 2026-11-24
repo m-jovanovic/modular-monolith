@@ -37,11 +37,18 @@ def indexed(records):
 
 def check_links(manifest):
     diagrams, snippets, tests, decisions = (indexed(manifest[key]) for key in ("diagrams", "snippets", "tests", "decisions"))
+    for collection in (diagrams, snippets, tests, decisions):
+        for record in collection.values():
+            for field in ("path", "sourcePath", "asset"):
+                if field in record:
+                    safe_path(record[field])
     for step in indexed(manifest["steps"]).values():
+        if step["diagramId"] not in diagrams:
+            raise ValueError(f'{step["id"]}: unknown diagram {step["diagramId"]}')
         diagram = diagrams[step["diagramId"]]
         for key in ("node", "edge"):
             selected = set(step[f"{key}Ids"])
-            if not selected or not selected.issubset(diagram[f"{key}s"]):
+            if len(selected) != len(step[f"{key}Ids"]) or not selected or not selected.issubset(diagram[f"{key}s"]):
                 raise ValueError(f'{step["id"]}: unknown {key} in {diagram["id"]}')
         for group, key in ((snippets, "snippetId"), (tests, "testId"), (decisions, "decisionId")):
             if step[key] not in group:

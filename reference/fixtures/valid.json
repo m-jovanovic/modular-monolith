@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "m-jovanovic/modular-monolith",
+    "commit": "da85e7bae5722c58dd416df2ad7cbff15f84c71d"
+  },
+  "steps": [
+    {
+      "id": "enroll-copy",
+      "title": "Enroll the drill",
+      "description": "Lending asks Catalog for its public description and associates it with a unique barcode.",
+      "module": "Lending",
+      "diagramId": "module-map",
+      "nodeIds": [
+        "catalog",
+        "lending"
+      ],
+      "edgeIds": [
+        "catalog-lookup"
+      ],
+      "snippetId": "enroll-copy",
+      "testId": "enroll-copy",
+      "decisionId": "owned-data"
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "module-map",
+      "title": "Three modules in one host",
+      "path": "diagrams/module-map.svg",
+      "sourcePath": "docs/diagrams/module-map.svg",
+      "nodes": [
+        "catalog",
+        "lending",
+        "pickup-desk"
+      ],
+      "edges": [
+        "catalog-lookup",
+        "hold-events"
+      ]
+    }
+  ],
+  "snippets": [
+    {
+      "id": "enroll-copy",
+      "path": "src/Modules/Lending/EquipmentLibrary.Lending/Copies/EnrollCopy.cs",
+      "symbol": "EnrollCopy.HandleAsync",
+      "startLine": 21,
+      "endLine": 33,
+      "asset": "snippets/enroll-copy.txt"
+    }
+  ],
+  "tests": [
+    {
+      "id": "enroll-copy",
+      "path": "tests/Contracts/HoldContractTests.cs",
+      "symbol": "CatalogContractSuppliesDescriptionForEnrollment",
+      "startLine": 96,
+      "endLine": 111
+    }
+  ],
+  "decisions": [
+    {
+      "id": "owned-data",
+      "title": "Keep one owner for each decision",
+      "path": "docs/decisions/owned-data.md",
+      "asset": "decisions/owned-data.md"
+    }
+  ]
+}
