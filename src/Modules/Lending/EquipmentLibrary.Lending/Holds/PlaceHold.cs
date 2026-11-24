@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EquipmentLibrary.Lending.Domain;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using EquipmentLibrary.Lending.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -44,11 +45,12 @@ internal static class PlaceHold
         }
 
         await using NpgsqlCommand insert = connection.Sql("""
-            INSERT INTO lending.holds (id, copy_id, borrower_id, state, placed_at) VALUES ($1, $2, $3, 'held', $4)
+            INSERT INTO lending.holds (id, copy_id, borrower_id, state, placed_at) VALUES ($1, $2, $3, 'held', $4) RETURNING placed_at
             """, holdId, request.CopyId, borrowerId, now);
-        await insert.ExecuteNonQueryAsync(cancellationToken);
+        var placedAt = (DateTime)(await insert.ExecuteScalarAsync(cancellationToken))!;
+        var window = new HoldPickupWindow(placedAt);
         await HoldEvents.RecordAsync(connection, snapshot, HoldLifecycleEvent.Placed, 1, now, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return Results.Created($"/api/lending/holds/{holdId}", new HoldView(holdId, request.CopyId, "held"));
+        return Results.Created($"/api/lending/holds/{holdId}", new HoldView(holdId, request.CopyId, "held", window.Deadline, Expired: false));
     }
 }

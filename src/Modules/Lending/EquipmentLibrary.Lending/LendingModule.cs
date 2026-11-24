@@ -1,4 +1,5 @@
 using EquipmentLibrary.Lending.Copies;
+using EquipmentLibrary.Lending.Holds.Expiry;
 using EquipmentLibrary.Lending.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -9,9 +10,15 @@ namespace EquipmentLibrary.Lending;
 
 public static class LendingModule
 {
-    public static IServiceCollection AddLending(this IServiceCollection services)
+    public static IServiceCollection AddLending(this IServiceCollection services, bool runExpiryWorker = true)
     {
         services.AddScoped<LendingContext>();
+        services.AddScoped<ExpireDueHoldsHandler>();
+        if (runExpiryWorker)
+        {
+            services.AddHostedService<ExpireDueHoldsWorker>();
+        }
+
         return services;
     }
 
@@ -24,6 +31,7 @@ public static class LendingModule
         lending.MapGet("/availability/{catalogItemId:guid}", GetAvailability.HandleAsync);
         lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower");
         lending.MapGet("/holds/{holdId:guid}", Holds.GetHold.HandleAsync).RequireAuthorization();
+        lending.MapPost("/holds/expire-due", ExpireDueHoldsEndpoint.HandleAsync).RequireAuthorization("Pickup.Manage");
         lending.MapGet("/me/holds", Holds.ListMyHolds.HandleAsync).RequireAuthorization("Borrower");
         lending.MapPost("/holds/{holdId:guid}/cancel", Holds.CloseHold.CancelAsync).RequireAuthorization("Borrower");
         lending.MapPost("/holds/{holdId:guid}/collect", Holds.CloseHold.CollectAsync).RequireAuthorization("Pickup.Manage");

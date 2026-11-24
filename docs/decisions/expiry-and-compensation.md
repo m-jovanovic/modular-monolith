@@ -1,0 +1,11 @@
+# Close a pickup hold after 48 hours
+
+**Decision.** Lending owns the clock policy, copy availability and loan creation. A hold can be collected from placement until the instant before its 48-hour deadline. At the deadline the borrower loses the right to collect. A worker releases overdue holds once per minute, in batches of 50. The staff endpoint can run a bounded pass immediately. A backlog or unavailable database can delay availability beyond the deadline.
+
+The pure `HoldPickupWindow` value computes both the public deadline and the cutoff used by the database. Collection reads the clock after acquiring the hold lock. The expiry command selects active rows in placement order with `FOR UPDATE SKIP LOCKED`. A busy row remains eligible for the next pass. Competing workers can release disjoint batches. The command changes the hold, frees its copy and records the terminal event in one transaction. A retry finds only holds that are still active. [Domain policy](../../src/Modules/Lending/Domain/HoldPickupWindow.cs) · [Command handler](../../src/Modules/Lending/EquipmentLibrary.Lending/Holds/Expiry/ExpireDueHolds.cs)
+
+An expired hold reports `state=cancelled` and `expired=true` through Lending. The v1 subscriber sees the existing cancellation envelope at sequence 2. Its business effect remains removing the hold from the active pickup queue. No existing subscriber must interpret an additional event type. Historic cancelled holds default to `expired=false`.
+
+**When a saga would earn its cost.** Today a queue entry describes work. It can be reconstructed from Lending's committed transitions. If a future module independently charges a deposit or books an external courier, that module can have an outstanding obligation after expiry. The workflow would need to correlate the hold with the charge or booking, issue an idempotent refund or cancellation and track failures requiring staff intervention. The current release action only changes records that Lending owns.
+
+**Evidence.** The PostgreSQL tests run two expiry commands against a concurrent collection, verify the two v1 envelopes, hold a database row lock across a sweep and exercise the hosted worker on a controlled timer. The domain test checks the exact deadline and a timezone offset change. [Reproduce the lab](../../labs/hold-expiry/README.md)

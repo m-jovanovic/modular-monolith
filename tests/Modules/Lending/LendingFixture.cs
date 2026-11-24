@@ -21,6 +21,7 @@ public sealed class LendingFixture : IAsyncLifetime
     private PostgreSqlContainer? _postgres;
     private NpgsqlDataSource? _cluster;
     private WebApplication _app = null!;
+    internal ScenarioClock Clock { get; } = new();
     public NpgsqlDataSource Admin { get; private set; } = null!;
 
     public async Task InitializeAsync()
@@ -64,7 +65,7 @@ public sealed class LendingFixture : IAsyncLifetime
         WebApplicationBuilder builder = WebApplication.CreateSlimBuilder(["--hostBuilder:reloadConfigOnChange=false"]);
         builder.WebHost.UseTestServer();
         builder.Services.AddKeyedSingleton("Lending", (_, _) => NpgsqlDataSource.Create(runtime.ConnectionString));
-        builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+        builder.Services.AddSingleton<TimeProvider>(Clock);
         builder.Services.AddSingleton<ICatalogLookup, KnownCatalog>();
         builder.Services.AddLending();
         builder.Services.AddAuthentication("Fixture").AddScheme<AuthenticationSchemeOptions, FixtureIdentity>("Fixture", _ => { });
