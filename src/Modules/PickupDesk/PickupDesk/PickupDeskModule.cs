@@ -33,6 +33,8 @@ public static class PickupDeskModule
         group.MapPost("/queue/{holdId:guid}/ready", MarkPickupReady.HandleAsync);
         group.MapPost("/queue/{holdId:guid}/issues", ReportPickupIssue.HandleAsync);
         group.MapPost("/queue/{holdId:guid}/issues/resolve", ResolvePickupIssue.HandleAsync);
+        group.MapGet("/workload", GetDeskWorkload.HandleAsync);
+        group.MapGet("/history", ListClosedPickups.HandleAsync);
         return endpoints;
     }
 }
