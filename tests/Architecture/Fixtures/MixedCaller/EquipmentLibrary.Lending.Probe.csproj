@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../../../src/Modules/Catalog/Contracts/EquipmentLibrary.Catalog.Contracts.csproj" />
+    <ProjectReference Include="../../../../src/Modules/Catalog/Implementation/EquipmentLibrary.Catalog.csproj" />
+    <ProjectReference Include="../../../../src/Modules/PickupDesk/PickupDesk/EquipmentLibrary.PickupDesk.csproj" />
+  </ItemGroup>
+</Project>
