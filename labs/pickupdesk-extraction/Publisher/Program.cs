@@ -25,5 +25,10 @@ await app.Services.GetRequiredService<NatsJSContext>().PrepareAsync();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapCatalog().MapLending();
+app.MapGet("/lab/broker-backlog", async (NatsJSContext jetStream, CancellationToken token) =>
+{
+    INatsJSConsumer consumer = await jetStream.GetConsumerAsync(HoldTransport.Stream, HoldTransport.Consumer, token);
+    return Results.Ok(new { pending = consumer.Info.NumPending, awaitingAck = consumer.Info.NumAckPending });
+}).RequireAuthorization("Staff");
 app.MapGet("/health", () => Results.Ok());
 await app.RunAsync();
