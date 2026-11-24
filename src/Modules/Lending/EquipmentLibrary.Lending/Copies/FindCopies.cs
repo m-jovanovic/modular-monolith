@@ -21,6 +21,6 @@ internal static class FindCopies
             ORDER BY barcode, id LIMIT $4 OFFSET $5
             """).Bind(catalogItemId.HasValue, catalogItemId.GetValueOrDefault(), state ?? string.Empty, limit ?? 25, offset ?? 0);
         List<CopyView> items = await query.ReadListAsync(CopyView.Read, cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<CopyView>(items));
     }
 }

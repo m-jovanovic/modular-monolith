@@ -4,6 +4,8 @@ namespace EquipmentLibrary.Lending.Holds.Expiry;
 
 internal static class ExpireDueHoldsEndpoint
 {
+    internal sealed record ExpiryResult(int ExpiredCount);
+
     internal static async Task<IResult> HandleAsync(int? limit, ExpireDueHoldsHandler handler, CancellationToken cancellationToken)
     {
         if (limit is < 1 or > ExpireDueHolds.MaximumLimit)
@@ -12,6 +14,6 @@ internal static class ExpireDueHoldsEndpoint
         }
 
         int expiredCount = await handler.HandleAsync(new ExpireDueHolds(limit ?? ExpireDueHolds.DefaultLimit), cancellationToken);
-        return Results.Ok(new { expiredCount });
+        return Results.Ok(new ExpiryResult(expiredCount));
     }
 }
