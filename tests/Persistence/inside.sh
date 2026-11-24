@@ -108,3 +108,39 @@ if "$prior/infra/postgres/migrate.sh" >"$prior/checksum-result" 2>&1; then
 fi
 grep -q 'Previously applied migration has changed' "$prior/checksum-result"
 echo 'Previously applied migration edits are rejected.'
+
+# Bootstrap reuses cluster-wide logins and cannot silently rotate another database's password.
+CATALOG_PASSWORD=unexpected-bootstrap-value PGDATABASE=equipment_peer ./infra/postgres/migrate.sh >/dev/null
+for database in equipment_empty equipment_peer; do
+    test "$(PGDATABASE="$database" PGUSER=catalog_app PGPASSWORD="$CATALOG_PASSWORD" psql -XAtq -c 'SELECT current_user')" = catalog_app
+done
+psql -Xq -v ON_ERROR_STOP=1 -c "ALTER ROLE catalog_app PASSWORD 'catalog-rotated-fixture'"
+PGDATABASE=equipment_peer ./infra/postgres/migrate.sh >/dev/null
+for database in equipment_empty equipment_peer; do
+    test "$(PGDATABASE="$database" PGUSER=catalog_app PGPASSWORD=catalog-rotated-fixture psql -XAtq -c 'SELECT current_user')" = catalog_app
+    if PGDATABASE="$database" PGUSER=catalog_app PGPASSWORD="$CATALOG_PASSWORD" psql -Xq -c 'SELECT 1' >"$prior/login-result" 2>&1; then
+        echo "An old catalog_app password still authenticated to $database." >&2
+        exit 1
+    fi
+    grep -q 'password authentication failed' "$prior/login-result"
+done
+echo 'Bootstrap preserves existing credentials. Explicit role rotation applies to new logins in both databases.'
+
+# A script that fails after its first DDL statement must leave no object or ledger row behind.
+cp src/Modules/Catalog/Migrations/001_items.sql "$prior/src/Modules/Catalog/Migrations/"
+retry="$prior/src/Modules/Catalog/Migrations/999_retry_probe.sql"
+printf '%s\n' 'CREATE TABLE catalog.retry_probe (id integer PRIMARY KEY);' 'SELECT 1/0;' > "$retry"
+export PGDATABASE=equipment_empty
+if "$prior/infra/postgres/migrate.sh" >"$prior/retry-result" 2>&1; then
+    echo 'Expected the interrupted migration body to roll back.' >&2
+    exit 1
+fi
+grep -q 'division by zero' "$prior/retry-result"
+test "$(psql -XAtq -c "SELECT to_regclass('catalog.retry_probe') IS NULL")" = t
+test "$(psql -XAtq -c "SELECT count(*) FROM library_meta.migrations WHERE script='999_retry_probe.sql'")" = 0
+printf '%s\n' 'CREATE TABLE catalog.retry_probe (id integer PRIMARY KEY);' > "$retry"
+"$prior/infra/postgres/migrate.sh" >/dev/null
+"$prior/infra/postgres/migrate.sh" >/dev/null
+test "$(psql -XAtq -c "SELECT to_regclass('catalog.retry_probe') IS NOT NULL")" = t
+one "SELECT count(*) FROM library_meta.migrations WHERE module='Catalog' AND script='999_retry_probe.sql'"
+echo 'A failed migration rolled back both DDL and ledger. A repaired script ran exactly once.'
