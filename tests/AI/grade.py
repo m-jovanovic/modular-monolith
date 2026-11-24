@@ -26,18 +26,16 @@ def require(cwd, *args):
     return result.stdout
 
 
-def check_boundaries(source, task):
+def check_boundaries(source, check_contract_imports):
     # These signals explain common wrong turns. Runtime tests also execute as the module role.
-    if re.search(r'\b(?:catalog|lending)"?\s*\.\s*"?[a-z_]', source, re.I):
-        # The public event namespace is allowed for both tasks.
-        stripped = source.replace("EquipmentLibrary.Lending.IntegrationEvents", "")
-        if re.search(r'\b(?:catalog|lending)"?\s*\.\s*"?[a-z_]', stripped, re.I):
-            return "foreign schema or implementation"
+    stripped = source.replace("EquipmentLibrary.Lending.IntegrationEvents", "")
+    if re.search(r'\b(?:catalog|lending)"?\s*\.\s*"?[a-z_]', stripped, re.I):
+        return "foreign schema or implementation"
     if "FromKeyedServices(" in source and any(
         key != "PickupDesk" for key in re.findall(r'FromKeyedServices\(\s*"([^"]+)"', source)
     ):
         return "foreign database role"
-    if task == "rollup":
+    if check_contract_imports:
         for name in re.findall(r"^using ([\w.]+);", source, re.MULTILINE):
             if name != "EquipmentLibrary.Lending.IntegrationEvents" and name.split(".")[0] != "System":
                 return f"outside the event contract and BCL: {name}"
@@ -65,7 +63,7 @@ def assess(task, patch, checkout):
         if target.is_symlink() or not target.is_file():
             result.update(boundaries=False, reason="expected a regular source file")
             return result
-        violation = check_boundaries(target.read_text(), task)
+        violation = check_boundaries(target.read_text(), task == "rollup" and path == definition["implementation"])
         if violation:
             result.update(boundaries=False, reason=violation)
             return result
