@@ -1,0 +1,9 @@
+version,state,barcode,loans
+1,available,DRILL-018,0
+2,held,DRILL-018,0
+3,on-loan,DRILL-018,1
+4,available,DRILL-018,1
+5,available,DRILL-081,1
+6,held,DRILL-081,1
+7,available,DRILL-081,1
+8,retired,DRILL-081,1
