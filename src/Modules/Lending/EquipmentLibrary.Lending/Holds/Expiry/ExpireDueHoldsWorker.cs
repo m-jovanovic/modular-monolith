@@ -16,7 +16,7 @@ internal sealed partial class ExpireDueHoldsWorker(
             try
             {
                 await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-                var handler = scope.ServiceProvider.GetRequiredService<ExpireDueHoldsHandler>();
+                ExpireDueHoldsHandler handler = scope.ServiceProvider.GetRequiredService<ExpireDueHoldsHandler>();
                 int expired = await handler.HandleAsync(new ExpireDueHolds(ExpireDueHolds.DefaultLimit), stoppingToken);
                 if (expired > 0)
                 {

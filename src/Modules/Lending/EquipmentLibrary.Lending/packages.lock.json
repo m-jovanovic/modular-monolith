@@ -11,6 +11,9 @@
       "equipmentlibrary.catalog.contracts": {
         "type": "Project"
       },
+      "equipmentlibrary.lending.domain": {
+        "type": "Project"
+      },
       "equipmentlibrary.lending.integrationevents": {
         "type": "Project"
       }
