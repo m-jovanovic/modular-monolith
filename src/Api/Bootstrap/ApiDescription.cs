@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 
 namespace EquipmentLibrary.Api.Bootstrap;
@@ -23,7 +24,7 @@ internal static class ApiDescription
                 };
                 return Task.CompletedTask;
             });
-            options.AddOperationTransformer((operation, context, _) =>
+            options.AddOperationTransformer(async (operation, context, cancellationToken) =>
             {
                 IList<object> metadata = context.Description.ActionDescriptor.EndpointMetadata;
                 if (metadata.OfType<IAuthorizeData>().Any() && !metadata.OfType<IAllowAnonymous>().Any())
@@ -32,15 +33,27 @@ internal static class ApiDescription
                     [
                         new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference(scheme, context.Document)] = [] }
                     ];
+                    IOpenApiSchema problem = await context.GetOrCreateSchemaAsync(typeof(ProblemDetails), cancellationToken: cancellationToken);
+                    operation.Responses ??= new OpenApiResponses();
+                    operation.Responses["401"] = AuthProblem("Authentication required.", problem);
+                    operation.Responses["403"] = AuthProblem("Permission denied.", problem);
+
                     string[] policies = metadata.OfType<IAuthorizeData>().Select(rule => rule.Policy)
                         .OfType<string>().Distinct(StringComparer.Ordinal).ToArray();
                     operation.Description = policies.Length == 0
                         ? "Requires an authenticated library identity."
                         : $"Required permissions: {string.Join(", ", policies)}.";
                 }
-
-                return Task.CompletedTask;
             });
         });
     }
+
+    private static OpenApiResponse AuthProblem(string description, IOpenApiSchema schema) => new()
+    {
+        Description = description,
+        Content = new Dictionary<string, IOpenApiMediaType>(StringComparer.Ordinal)
+        {
+            ["application/problem+json"] = new OpenApiMediaType { Schema = schema }
+        }
+    };
 }
