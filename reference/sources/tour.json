@@ -1,0 +1,166 @@
+{
+  "steps": [
+    {
+      "id": "enroll-copy",
+      "title": "Enroll the drill",
+      "description": "Lending asks Catalog for its public description and associates it with a unique barcode.",
+      "module": "Lending",
+      "diagramId": "module-map",
+      "nodeIds": [
+        "catalog",
+        "lending"
+      ],
+      "edgeIds": [
+        "catalog-lookup"
+      ],
+      "snippetId": "enroll-copy",
+      "testId": "enroll-copy",
+      "decisionId": "owned-data"
+    },
+    {
+      "id": "reserve-copy",
+      "title": "Reserve the last copy",
+      "description": "Lending commits one winning hold and its outgoing fact after a conditional copy update.",
+      "module": "Lending",
+      "diagramId": "reserve-sequence",
+      "nodeIds": [
+        "borrower",
+        "lending",
+        "postgres"
+      ],
+      "edgeIds": [
+        "reserve-request",
+        "commit-hold"
+      ],
+      "snippetId": "place-hold",
+      "testId": "last-copy",
+      "decisionId": "atomic-reservation"
+    },
+    {
+      "id": "deliver-hold",
+      "title": "Accept the committed fact",
+      "description": "PickupDesk records the original message ID in its own durable inbox.",
+      "module": "PickupDesk",
+      "diagramId": "delivery-recovery",
+      "nodeIds": [
+        "outbox",
+        "inbox"
+      ],
+      "edgeIds": [
+        "durable-accept"
+      ],
+      "snippetId": "accept-inbox",
+      "testId": "durable-receipt",
+      "decisionId": "durable-delivery"
+    },
+    {
+      "id": "apply-pickup",
+      "title": "Update the pickup queue",
+      "description": "PickupDesk applies the newest full snapshot for the hold and retains its sequence after closure.",
+      "module": "PickupDesk",
+      "diagramId": "delivery-recovery",
+      "nodeIds": [
+        "inbox",
+        "queue"
+      ],
+      "edgeIds": [
+        "apply-once"
+      ],
+      "snippetId": "apply-snapshot",
+      "testId": "terminal-first",
+      "decisionId": "durable-delivery"
+    },
+    {
+      "id": "reject-duplicate",
+      "title": "Handle repeated delivery",
+      "description": "A matching receipt is acknowledged again. A different fact reusing its ID is rejected.",
+      "module": "PickupDesk",
+      "diagramId": "delivery-recovery",
+      "nodeIds": [
+        "outbox",
+        "inbox"
+      ],
+      "edgeIds": [
+        "durable-accept"
+      ],
+      "snippetId": "deduplicate-receipt",
+      "testId": "duplicate-delivery",
+      "decisionId": "durable-delivery"
+    }
+  ],
+  "diagrams": [
+    "module-map",
+    "reserve-sequence",
+    "delivery-recovery"
+  ],
+  "snippets": [
+    {
+      "id": "enroll-copy",
+      "path": "src/Modules/Lending/EquipmentLibrary.Lending/Copies/EnrollCopy.cs",
+      "symbol": "EnrollCopy.HandleAsync",
+      "start": "CatalogItemDescription? item = await catalog.GetItemAsync",
+      "end": "CopyView? created = await insert.ReadOneAsync"
+    },
+    {
+      "id": "place-hold",
+      "path": "src/Modules/Lending/EquipmentLibrary.Lending/Holds/PlaceHold.cs",
+      "symbol": "PlaceHold.HandleAsync",
+      "start": "await using NpgsqlCommand claim = connection.Sql",
+      "end": "await transaction.CommitAsync(cancellationToken)"
+    },
+    {
+      "id": "accept-inbox",
+      "path": "src/Modules/PickupDesk/PickupDesk/Inbox/PickupInbox.cs",
+      "symbol": "PickupInbox.AcceptAsync",
+      "start": "string payload = Encoding.UTF8",
+      "end": "if (await insert.ExecuteNonQueryAsync"
+    },
+    {
+      "id": "apply-snapshot",
+      "path": "src/Modules/PickupDesk/PickupDesk/Inbox/ApplyHoldSnapshot.cs",
+      "symbol": "ApplyHoldSnapshot.ExecuteAsync",
+      "start": "INSERT INTO pickup_desk.holds AS current",
+      "end": "AND current.barcode = excluded.barcode"
+    },
+    {
+      "id": "deduplicate-receipt",
+      "path": "src/Modules/PickupDesk/PickupDesk/Inbox/PickupInbox.cs",
+      "symbol": "PickupInbox.AcceptAsync",
+      "start": "await using NpgsqlCommand compare = database.CreateCommand",
+      "end": "throw new InvalidDataException("
+    }
+  ],
+  "tests": [
+    {
+      "id": "enroll-copy",
+      "path": "tests/Contracts/HoldContractTests.cs",
+      "symbol": "CatalogContractSuppliesDescriptionForEnrollment"
+    },
+    {
+      "id": "last-copy",
+      "path": "tests/Modules/Lending/ReservationTests.cs",
+      "symbol": "LastCopyHasOneWinnerAndOneOutboxEvent"
+    },
+    {
+      "id": "durable-receipt",
+      "path": "tests/Modules/PickupDesk/PickupDeskTests.cs",
+      "symbol": "FailedCompletionRollsBackProjectionAndOperatorCanRecoverTheOriginalReceipt"
+    },
+    {
+      "id": "terminal-first",
+      "path": "tests/Modules/PickupDesk/PickupDeskTests.cs",
+      "symbol": "TerminalSnapshotRemainsClosedWhenPlacementArrivesLate"
+    },
+    {
+      "id": "duplicate-delivery",
+      "path": "tests/Modules/PickupDesk/PickupDeskTests.cs",
+      "symbol": "RepeatedDeliveryAndConcurrentWorkersProduceOnePendingPickup"
+    }
+  ],
+  "decisions": [
+    "owned-data",
+    "atomic-reservation",
+    "durable-delivery",
+    "agent-evaluation"
+  ]
+}
