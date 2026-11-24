@@ -12,6 +12,7 @@ public static class CatalogModule
     {
         services.AddScoped<ICatalogLookup, CatalogLookup>();
         services.AddScoped<CreateItem.Handler>();
+        services.AddScoped<UpdateItem.Handler>();
         return services;
     }
 
@@ -20,6 +21,7 @@ public static class CatalogModule
         RouteGroupBuilder items = endpoints.MapGroup("/api/catalog/items");
         CreateItem.MapEndpoint(items);
         GetItem.MapEndpoint(items);
+        UpdateItem.MapEndpoint(items);
         return endpoints;
     }
 }

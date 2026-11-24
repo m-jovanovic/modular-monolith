@@ -23,6 +23,19 @@ public sealed class CatalogItemTests(CatalogFixture app) : IClassFixture<Catalog
     }
 
     [Fact]
+    public async Task CorrectingADescriptionPreservesTheCatalogIdentity()
+    {
+        using HttpResponseMessage created = await app.Staff.PostAsJsonAsync(Items, new { title = "Sander", description = "Old description." });
+        CatalogItemDescription? original = await created.Content.ReadFromJsonAsync<CatalogItemDescription>();
+        Assert.NotNull(original);
+        using HttpResponseMessage updated = await app.Staff.PutAsJsonAsync(created.Headers.Location,
+            new { title = "Orbital sander", description = "5-inch sanding pad." });
+        updated.EnsureSuccessStatusCode();
+        CatalogItemDescription? item = await app.Public.GetFromJsonAsync<CatalogItemDescription>(created.Headers.Location);
+        Assert.Equal(new CatalogItemDescription(original.Id, "Orbital sander", "5-inch sanding pad."), item);
+    }
+
+    [Fact]
     public async Task ItemWritesRequireTheCatalogCapability()
     {
         using HttpResponseMessage anonymous = await app.Public.PostAsJsonAsync(Items, new { title = "Saw", description = "Pull saw." });
