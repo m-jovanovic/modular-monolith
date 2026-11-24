@@ -14,6 +14,7 @@ public static class CatalogModule
         services.AddScoped<CreateItem.Handler>();
         services.AddScoped<UpdateItem.Handler>();
         services.AddScoped<SearchItems.Handler>();
+        services.AddScoped<ChangeItemPublication.Handler>();
         return services;
     }
 
@@ -23,7 +24,8 @@ public static class CatalogModule
         CreateItem.MapEndpoint(items);
         GetItem.MapEndpoint(items);
         UpdateItem.MapEndpoint(items);
-        SearchItems.MapEndpoint(items);
+        SearchItems.MapEndpoints(items);
+        ChangeItemPublication.MapEndpoints(items);
         return endpoints;
     }
 }

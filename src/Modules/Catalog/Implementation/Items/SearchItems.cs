@@ -4,10 +4,19 @@ namespace EquipmentLibrary.Catalog.Items;
 
 internal static class SearchItems
 {
-    internal static void MapEndpoint(RouteGroupBuilder items) =>
+    internal static void MapEndpoints(RouteGroupBuilder items)
+    {
         items.MapGet("/", Search).AllowAnonymous();
+        items.MapGet("/archived", SearchArchive).RequireAuthorization(CatalogModule.ManagePolicy);
+    }
 
-    private static async Task<IResult> Search(string? q, int? page, int? pageSize, Handler handler, CancellationToken cancellationToken)
+    private static Task<IResult> Search(string? q, int? page, int? pageSize, Handler handler, CancellationToken cancellationToken) =>
+        Find(q, page, pageSize, archived: false, handler, cancellationToken);
+
+    private static Task<IResult> SearchArchive(string? q, int? page, int? pageSize, Handler handler, CancellationToken cancellationToken) =>
+        Find(q, page, pageSize, archived: true, handler, cancellationToken);
+
+    private static async Task<IResult> Find(string? q, int? page, int? pageSize, bool archived, Handler handler, CancellationToken cancellationToken)
     {
         string term = q?.Trim() ?? string.Empty;
         int number = page ?? 1;
@@ -17,24 +26,25 @@ internal static class SearchItems
             return CatalogProblem.Invalid("Use a search term up to 160 characters, a page from 1 to 100000 and a pageSize from 1 to 100.");
         }
 
-        IReadOnlyList<CatalogItemDescription> matches = await handler.Handle(term, number, size, cancellationToken);
+        IReadOnlyList<CatalogItemDescription> matches = await handler.Handle(term, number, size, archived, cancellationToken);
         return Results.Ok(matches);
     }
 
     internal sealed class Handler([FromKeyedServices(CatalogModule.DatabaseKey)] NpgsqlDataSource database)
     {
-        public async Task<IReadOnlyList<CatalogItemDescription>> Handle(string term, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<CatalogItemDescription>> Handle(string term, int page, int pageSize, bool archived, CancellationToken cancellationToken)
         {
             await using NpgsqlCommand query = database.CreateCommand("""
                 SELECT id, title, description
                 FROM catalog.items
-                WHERE strpos(lower(title || ' ' || description), lower($1)) > 0
+                WHERE strpos(lower(title || ' ' || description), lower($1)) > 0 AND is_archived = $4
                 ORDER BY lower(title), id
                 LIMIT $2 OFFSET $3
                 """);
             query.Parameters.AddWithValue(term);
             query.Parameters.AddWithValue(pageSize);
             query.Parameters.AddWithValue((page - 1) * pageSize);
+            query.Parameters.AddWithValue(archived);
             await using NpgsqlDataReader reader = await query.ExecuteReaderAsync(cancellationToken);
             var matches = new List<CatalogItemDescription>();
             while (await reader.ReadAsync(cancellationToken))

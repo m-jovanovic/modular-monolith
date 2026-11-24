@@ -23,6 +23,27 @@ public sealed class CatalogItemTests(CatalogFixture app) : IClassFixture<Catalog
     }
 
     [Fact]
+    public async Task StaffCanArchiveAndRestoreAnItemWithoutBreakingExistingReferences()
+    {
+        string title = $"Hand winch {Guid.NewGuid():N}";
+        using HttpResponseMessage created = await app.Staff.PostAsJsonAsync(Items, new { title, description = "For equipment loading." });
+        string location = created.Headers.Location!.ToString();
+        string filter = $"?q={Uri.EscapeDataString(title)}";
+
+        using HttpResponseMessage archive = await app.Staff.PostAsync(location + "/archive", null);
+        Assert.Equal(HttpStatusCode.NoContent, archive.StatusCode);
+        Assert.Empty((await app.Public.GetFromJsonAsync<CatalogItemDescription[]>(Items + filter))!);
+        Assert.Equal(title, (await app.Public.GetFromJsonAsync<CatalogItemDescription>(location))!.Title);
+        using HttpResponseMessage denied = await app.Public.GetAsync(Items + "/archived" + filter);
+        Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
+        Assert.Single((await app.Staff.GetFromJsonAsync<CatalogItemDescription[]>(Items + "/archived" + filter))!);
+
+        using HttpResponseMessage restore = await app.Staff.PostAsync(location + "/restore", null);
+        Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
+        Assert.Single((await app.Public.GetFromJsonAsync<CatalogItemDescription[]>(Items + filter))!);
+    }
+
+    [Fact]
     public async Task ReadersSearchLiteralTextInStablePages()
     {
         string term = $"tool%{Guid.NewGuid():N}";
