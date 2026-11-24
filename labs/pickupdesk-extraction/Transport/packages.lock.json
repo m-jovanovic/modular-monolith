@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net11.0": {
+      "NATS.Client.JetStream": {
+        "type": "Direct",
+        "requested": "[3.4.1, )",
+        "resolved": "3.4.1",
+        "contentHash": "E7VyM76sdcrqEN8pjMmZhxfX1r02LMLnk5qcMVCbKeK+73NP6YEWQKAHGh7V5Ltwvzdc7grtZzINYKL+VekSsg==",
+        "dependencies": {
+          "NATS.Client.Core": "3.4.1"
+        }
+      },
+      "NATS.Client.Abstractions": {
+        "type": "Transitive",
+        "resolved": "3.4.1",
+        "contentHash": "G+8rJz42ova/EzzHoSa85Y8WR4BkYV2O8LLwRIgSzJynOX/Kr2ZAUsXcHr6NKtQUhVA4nye45dBgCLUBpsjMVA=="
+      },
+      "NATS.Client.Core": {
+        "type": "Transitive",
+        "resolved": "3.4.1",
+        "contentHash": "zZWYC86Q6dFsFypcLq5LC9+JlZYcY15yZGySASXjcamS8YSH32DhYAWD5A6P1xcCPezxjEUTdNCmk1qKeQ8yQg==",
+        "dependencies": {
+          "NATS.Client.Abstractions": "3.4.1",
+          "NATS.NKeys": "1.0.1"
+        }
+      },
+      "NATS.NKeys": {
+        "type": "Transitive",
+        "resolved": "1.0.1",
+        "contentHash": "xtURX0fexmMd10noG3Uc8gFgwaH7QLQxxgdaVoQKFo0+8a4blwe8vPGgY2S5pzeVYcRXyjlIoA4AR4JgtThyjQ=="
+      }
+    }
+  }
+}

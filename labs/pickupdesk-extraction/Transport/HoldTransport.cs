@@ -5,7 +5,7 @@ using NATS.Client.JetStream.Models;
 
 namespace EquipmentLibrary.Lab.JetStream;
 
-public static class HoldStream
+public static class HoldTransport
 {
     public const string Subject = "library.lending.holds.v1";
     public const string Stream = "LIBRARY_HOLDS";

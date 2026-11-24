@@ -12,7 +12,7 @@ internal sealed class JetStreamSubscription(NatsJSContext jetStream) : IHoldSubs
 
     public async Task AcceptAsync(HoldLifecycleEvent message, CancellationToken cancellationToken)
     {
-        PubAckResponse acknowledgement = await jetStream.PublishAsync(HoldStream.Subject, HoldEventWire.Write(message),
+        PubAckResponse acknowledgement = await jetStream.PublishAsync(HoldTransport.Subject, HoldEventWire.Write(message),
             opts: new NatsJSPubOpts { MsgId = message.MessageId.ToString() }, cancellationToken: cancellationToken);
         acknowledgement.EnsureSuccess();
     }
