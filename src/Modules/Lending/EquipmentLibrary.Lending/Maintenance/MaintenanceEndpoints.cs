@@ -17,16 +17,19 @@ internal static class MaintenanceEndpoints
     internal static void MapMaintenance(this RouteGroupBuilder lending)
     {
         lending.MapPost("/copies/{copyId:guid}/maintenance", OpenAsync).RequireAuthorization("Lending.Enroll")
-            .WithName("OpenMaintenanceOrder").Produces<MaintenanceOrder>(201);
+            .WithName("OpenMaintenanceOrder").Produces<MaintenanceOrder>(StatusCodes.Status201Created)
+            .ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
         RouteGroupBuilder orders = lending.MapGroup("/maintenance").RequireAuthorization("Lending.Enroll");
-        orders.MapGet("", ListOpenAsync).WithName("ListOpenMaintenanceOrders");
-        orders.MapGet("/{orderId:guid}", GetAsync).WithName("GetMaintenanceOrder").Produces<MaintenanceOrder>();
+        orders.MapGet("", ListOpenAsync).WithName("ListOpenMaintenanceOrders")
+            .Produces<LendingPage<MaintenanceOrder>>().ProducesProblem(400);
+        orders.MapGet("/{orderId:guid}", GetAsync).WithName("GetMaintenanceOrder")
+            .Produces<MaintenanceOrder>().ProducesProblem(404);
         orders.MapPost("/{orderId:guid}/repair", (Guid orderId, CloseRequest request, MaintenanceOrderHandler handler,
             CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Repair, handler, cancellationToken))
-            .WithName("RepairCopy");
+            .WithName("RepairCopy").Produces<MaintenanceOrder>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
         orders.MapPost("/{orderId:guid}/withdraw", (Guid orderId, CloseRequest request, MaintenanceOrderHandler handler,
             CancellationToken cancellationToken) => ResolveAsync(orderId, request, MaintenanceResolution.Withdraw, handler, cancellationToken))
-            .WithName("WithdrawDamagedCopy");
+            .WithName("WithdrawDamagedCopy").Produces<MaintenanceOrder>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409);
     }
 
     private static async Task<IResult> OpenAsync(Guid copyId, OpenRequest request, MaintenanceOrderHandler handler,
@@ -66,7 +69,7 @@ internal static class MaintenanceEndpoints
             WHERE closed_at IS NULL ORDER BY opened_at, id LIMIT $1 OFFSET $2
             """).Bind(limit ?? 25, offset ?? 0);
         List<MaintenanceOrder> items = await command.ReadListAsync(PostgresMaintenanceOrders.Read, cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<MaintenanceOrder>(items));
     }
 
     private static IResult Problem(MaintenanceResult result) => result switch

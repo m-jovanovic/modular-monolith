@@ -4,8 +4,16 @@ internal static class ClassifyItem
 {
     internal static void MapEndpoints(RouteGroupBuilder items)
     {
-        items.MapPut("/{itemId:guid}/categories/{categoryId:guid}", Assign).WithName("AssignCategory").RequireAuthorization(CatalogModule.ManagePolicy);
-        items.MapDelete("/{itemId:guid}/categories/{categoryId:guid}", Remove).WithName("RemoveCategory").RequireAuthorization(CatalogModule.ManagePolicy);
+        items.MapPut("/{itemId:guid}/categories/{categoryId:guid}", Assign)
+            .WithName("AssignCategory")
+            .RequireAuthorization(CatalogModule.ManagePolicy)
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        items.MapDelete("/{itemId:guid}/categories/{categoryId:guid}", Remove)
+            .WithName("RemoveCategory")
+            .RequireAuthorization(CatalogModule.ManagePolicy)
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static Task<IResult> Assign(Guid itemId, Guid categoryId, Handler handler, CancellationToken cancellationToken) =>

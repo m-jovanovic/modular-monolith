@@ -25,6 +25,6 @@ internal static class ListMyHolds
             ORDER BY placed_at DESC, id LIMIT $2 OFFSET $3
             """).Bind(borrowerId, limit ?? 25, offset ?? 0);
         List<HoldView> items = await find.ReadListAsync(HoldView.Read, cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<HoldView>(items));
     }
 }

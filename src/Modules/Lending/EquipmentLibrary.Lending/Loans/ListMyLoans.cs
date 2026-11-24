@@ -26,6 +26,6 @@ internal static class ListMyLoans
             ORDER BY checked_out_at DESC, id LIMIT $3 OFFSET $4
             """).Bind(borrowerId, openOnly ?? false, limit ?? 25, offset ?? 0);
         List<LoanView> items = await query.ReadListAsync(LoanView.Read, cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<LoanView>(items));
     }
 }

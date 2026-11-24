@@ -12,9 +12,12 @@ public static class DeliveryOperations
     public static void MapDeliveryOperations(this IEndpointRouteBuilder endpoints)
     {
         RouteGroupBuilder delivery = endpoints.MapGroup("/api/lending/delivery").WithTags("Lending delivery").RequireAuthorization("Pickup.Operate");
-        delivery.MapGet("/status", GetStatusAsync).WithName("GetDeliveryStatus");
-        delivery.MapGet("/quarantine", ListQuarantinedAsync).WithName("ListQuarantinedDeliveries");
-        delivery.MapPost("/quarantine/{messageId:guid}/redrive", RedriveAsync).WithName("RedriveDelivery");
+        delivery.MapGet("/status", GetStatusAsync).WithName("GetDeliveryStatus")
+            .Produces<DeliveryStatus>();
+        delivery.MapGet("/quarantine", ListQuarantinedAsync).WithName("ListQuarantinedDeliveries")
+            .Produces<IReadOnlyList<QuarantinedDelivery>>();
+        delivery.MapPost("/quarantine/{messageId:guid}/redrive", RedriveAsync).WithName("RedriveDelivery")
+            .Produces(204).ProducesProblem(404);
     }
 
     private static async Task<IResult> GetStatusAsync(
@@ -30,8 +33,7 @@ public static class DeliveryOperations
             """);
         await using NpgsqlDataReader row = await command.ExecuteReaderAsync(cancellationToken);
         await row.ReadAsync(cancellationToken);
-        return Results.Ok(new { Pending = row.GetInt64(0), Quarantined = row.GetInt64(1),
-            Delivered = row.GetInt64(2), OldestPendingSeconds = row.GetDouble(3) });
+        return Results.Ok(new DeliveryStatus(row.GetInt64(0), row.GetInt64(1), row.GetInt64(2), row.GetDouble(3)));
     }
 
     private static async Task<IResult> ListQuarantinedAsync(
@@ -73,6 +75,8 @@ public static class DeliveryOperations
             ? Results.NoContent()
             : Results.NotFound();
     }
+
+    private sealed record DeliveryStatus(long Pending, long Quarantined, long Delivered, double OldestPendingSeconds);
 
     private sealed record QuarantinedDelivery(Guid MessageId, int Attempts, string Reason, DateTime QuarantinedAt);
 }

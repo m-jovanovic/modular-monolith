@@ -7,6 +7,8 @@ namespace EquipmentLibrary.PickupDesk.Features;
 
 internal static class ListQuarantinedReceipts
 {
+    internal sealed record ReceiptList(IReadOnlyList<Receipt> Items);
+
     internal sealed record Receipt(Guid MessageId, int Attempts, string Failure, DateTime QuarantinedAt);
 
     internal static async Task<IResult> HandleAsync(int? limit, int? offset,
@@ -32,6 +34,6 @@ internal static class ListQuarantinedReceipts
             items.Add(new(row.GetGuid(0), row.GetInt32(1), row.GetString(2), row.GetDateTime(3)));
         }
 
-        return Results.Ok(new { items });
+        return Results.Ok(new ReceiptList(items));
     }
 }

@@ -5,7 +5,12 @@ internal static class CreateCategory
     internal sealed record Request(string? Name);
 
     internal static void MapEndpoint(RouteGroupBuilder categories) =>
-        categories.MapPost("/", Execute).WithName("CreateCategory").RequireAuthorization(CatalogModule.ManagePolicy);
+        categories.MapPost("/", Execute)
+            .WithName("CreateCategory")
+            .RequireAuthorization(CatalogModule.ManagePolicy)
+            .Produces<Category>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
     private static async Task<IResult> Execute(Request request, Handler handler, CancellationToken cancellationToken)
     {

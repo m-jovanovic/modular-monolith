@@ -18,6 +18,6 @@ internal static class ListOverdueLoans
             FROM lending.loans WHERE returned_at IS NULL AND due_at <= $1 ORDER BY due_at, id LIMIT $2 OFFSET $3
             """).Bind(lending.Clock.GetUtcNow(), limit ?? 25, offset ?? 0);
         List<LoanView> items = await query.ReadListAsync(LoanView.Read, cancellationToken);
-        return Results.Ok(new { items });
+        return Results.Ok(new LendingPage<LoanView>(items));
     }
 }

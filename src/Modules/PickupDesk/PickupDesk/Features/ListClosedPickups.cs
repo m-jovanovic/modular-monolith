@@ -31,6 +31,6 @@ internal static class ListClosedPickups
             items.Add(PickupView.Read(reader));
         }
 
-        return Results.Ok(new { items });
+        return Results.Ok(new PickupList(items));
     }
 }
