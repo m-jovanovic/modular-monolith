@@ -4,8 +4,15 @@ internal static class BrowseCategories
 {
     internal static void MapEndpoints(RouteGroupBuilder categories)
     {
-        categories.MapGet("/", List).WithName("ListCategories").AllowAnonymous();
-        categories.MapGet("/{categoryId:guid}", Get).WithName("GetCategory").AllowAnonymous();
+        categories.MapGet("/", List)
+            .WithName("ListCategories")
+            .AllowAnonymous()
+            .Produces<IReadOnlyList<Category>>();
+        categories.MapGet("/{categoryId:guid}", Get)
+            .WithName("GetCategory")
+            .AllowAnonymous()
+            .Produces<Category>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> List(Handler handler, CancellationToken cancellationToken) =>
