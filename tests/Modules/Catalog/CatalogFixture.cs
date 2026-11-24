@@ -29,7 +29,7 @@ public sealed class CatalogFixture : IAsyncLifetime
         string? server = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN");
         if (string.IsNullOrWhiteSpace(server))
         {
-            postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+            postgres = new PostgreSqlBuilder("postgres:17.12-alpine3.23").Build();
             using var startup = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             await postgres.StartAsync(startup.Token);
             server = postgres.GetConnectionString();
@@ -64,7 +64,8 @@ public sealed class CatalogFixture : IAsyncLifetime
             Username = runtimeRole,
             Password = password
         };
-        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+        WebApplicationBuilder builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
+        builder.Services.AddRouting();
         builder.WebHost.UseTestServer();
         builder.Services.AddKeyedSingleton("Catalog", (_, _) => NpgsqlDataSource.Create(runtime.ConnectionString));
         builder.Services.AddAuthentication("fixture").AddScheme<AuthenticationSchemeOptions, FixtureAuthentication>("fixture", null);
