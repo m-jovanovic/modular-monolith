@@ -131,4 +131,4 @@ public sealed class CatalogFixture : IAsyncLifetime
 }
 
 [CollectionDefinition(nameof(CatalogFixture))]
-public sealed class CatalogCollection : ICollectionFixture<CatalogFixture>;
+public sealed class CatalogDatabaseTests : ICollectionFixture<CatalogFixture>;
