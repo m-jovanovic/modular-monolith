@@ -59,7 +59,7 @@ for schema in catalog lending pickup_desk; do
         catalog) PGPASSWORD=$CATALOG_PASSWORD; table=catalog.items
             write="INSERT INTO catalog.items (id, title, description) VALUES (gen_random_uuid(), 'Test', 'Fixture')" ;;
         lending) PGPASSWORD=$LENDING_PASSWORD; table=lending.copies
-            write="INSERT INTO lending.copies VALUES (gen_random_uuid(), gen_random_uuid(), 'Test', 'ROLE-001', 'available', now())" ;;
+            write="INSERT INTO lending.copies (id, catalog_item_id, item_title, barcode, state, enrolled_at) VALUES (gen_random_uuid(), gen_random_uuid(), 'Test', 'ROLE-001', 'available', now())" ;;
         pickup_desk) PGPASSWORD=$PICKUP_PASSWORD; table=pickup_desk.inbox
             write="INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload) VALUES ('fixture', gen_random_uuid(), '{}')" ;;
     esac
