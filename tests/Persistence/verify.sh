@@ -29,12 +29,17 @@ fi
 
 # Docker assigns a unique ID and keeps the test cluster isolated from any running application.
 cluster=$(docker run --detach --rm --env POSTGRES_PASSWORD=fixture-only postgres:17.12-alpine3.23)
-trap 'docker rm --force "$cluster" >/dev/null 2>&1 || true' EXIT
+cleanup_cluster() {
+    result=$?
+    if (( result != 0 )); then docker logs --tail 80 "$cluster" >&2; fi
+    docker rm --force "$cluster" >/dev/null 2>&1 || true
+}
+trap cleanup_cluster EXIT
 for attempt in {1..60}; do
-    if docker exec "$cluster" pg_isready -U postgres >/dev/null 2>&1; then break; fi
+    if docker exec "$cluster" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then break; fi
     sleep 1
 done
-docker exec "$cluster" pg_isready -U postgres >/dev/null
+docker exec "$cluster" pg_isready -h 127.0.0.1 -U postgres >/dev/null
 docker exec "$cluster" mkdir /library-check
 copy_suite |
     docker exec --interactive "$cluster" tar -xf - -C /library-check
