@@ -52,3 +52,17 @@ Run `./scripts/verify.sh tests/Modules/Lending/EquipmentLibrary.Lending.Tests.cs
 - [Loan renewal, overdue reports and safe return retries](../../tests/Modules/Lending/LoanLifecycleTests.cs)
 - [Enrollment, retirement and reinstatement](../../tests/Modules/Lending/CopyInventoryTests.cs)
 - [Deadline races, locked batches and worker ticks](../../tests/Modules/Lending/HoldExpiryTests.cs)
+
+## Take damaged equipment out of circulation
+
+A librarian can open a maintenance order on an available copy. The same conditional update that protects a reservation also protects maintenance intake. If inspection and reservation race, exactly one can claim the copy. An open order appears in the staff worklist, and the availability summary counts the copy under `maintenance`.
+
+| Method and path | What staff can do |
+| --- | --- |
+| POST /copies/{copyId}/maintenance | Record a reason, remove this copy from circulation and receive the new order's Location. |
+| GET /maintenance | Page through open maintenance orders, oldest first. |
+| GET /maintenance/{orderId} | Look up the original report, outcome and timestamps. |
+| POST /maintenance/{orderId}/repair | Record a resolution note and return the copy to availability. |
+| POST /maintenance/{orderId}/withdraw | Record the reason for withdrawal and retire the copy. |
+
+These five routes require `Lending.Enroll`. Opening takes a `reason` and resolving takes a `note`, each 1–500 characters. Repeating a resolution with the same outcome and note returns the original closed order. Retrying an old repair after a borrower has reserved that copy leaves the new hold in place. A conflicting resolution returns 409. [Application commands](../../src/Modules/Lending/Application/Maintenance/MaintenanceOrders.cs) · [PostgreSQL adapter](../../src/Modules/Lending/EquipmentLibrary.Lending/Maintenance/PostgresMaintenanceOrders.cs) · [Race and retry tests](../../tests/Modules/Lending/MaintenanceOrderTests.cs)

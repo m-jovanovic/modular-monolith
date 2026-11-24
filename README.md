@@ -20,7 +20,7 @@ The walkthrough creates a catalog item and a uniquely barcoded copy, sends **two
 | Module | What you can do | Code and API guide |
 | --- | --- | --- |
 | Catalog | Publish and edit equipment descriptions, search the catalog, archive and restore items, create categories, classify equipment and browse a category. | [Catalog guide](docs/modules/catalog.md) · [Use cases](src/Modules/Catalog/Implementation/) |
-| Lending | Enroll physical copies, check availability, reserve the last copy, cancel or collect a hold, list a member's holds and loans, renew or return a loan, retire or reinstate a copy, and inspect circulation history or overdue equipment. | [Lending guide](docs/modules/lending.md) · [Use cases](src/Modules/Lending/EquipmentLibrary.Lending/) |
+| Lending | Enroll physical copies, check availability, reserve the last copy, cancel or collect a hold, list a member's holds and loans, renew or return a loan, expire a pickup window, repair or withdraw damaged equipment, and inspect circulation history or overdue loans. | [Lending guide](docs/modules/lending.md) · [Use cases](src/Modules/Lending/EquipmentLibrary.Lending/) |
 | PickupDesk | Browse and filter the queue, claim or release preparation, report and resolve an issue, mark a pickup ready, review staff workload, inspect closed pickups and recover a quarantined event. | [PickupDesk guide](docs/modules/pickupdesk.md) · [Use cases](src/Modules/PickupDesk/PickupDesk/Features/) |
 
 ```sh

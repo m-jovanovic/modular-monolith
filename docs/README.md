@@ -20,3 +20,10 @@ A short-lived migration container provisions the database before API startup. Th
 ## Contribute or get help
 
 For development setup and verification, see the [contributor guide](../CONTRIBUTING.md). Use the [public issue tracker](https://github.com/m-jovanovic/modular-monolith/issues) for reproducible bugs and architecture questions. Include the Git tag, command, expected behavior and observed result. Remove private credentials and borrower information. Milan Jovanović maintains the public examples and approves changes to published seams. Explore the companion material at [modularmonolith.com](https://modularmonolith.com).
+
+## Extend the model
+
+* [Expire a hold](../labs/hold-expiry/README.md) with a controlled clock and verify that a late collection cannot beat its deadline.
+* [Repair or withdraw a damaged copy](modules/lending.md#take-damaged-equipment-out-of-circulation) while a borrower tries to reserve it.
+* [Extract PickupDesk](../labs/pickupdesk-extraction/README.md) and measure the same workload across an in-process relay and a separately deployable JetStream consumer.
+* [Reconstruct a copy's history](../labs/copy-history/README.md) from versioned events and compare the result with a conventional audit.
