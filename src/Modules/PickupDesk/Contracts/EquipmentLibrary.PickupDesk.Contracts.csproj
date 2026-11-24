@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../Lending/IntegrationEvents/EquipmentLibrary.Lending.IntegrationEvents.csproj" />
+  </ItemGroup>
+</Project>
