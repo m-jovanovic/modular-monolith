@@ -63,7 +63,10 @@ def render(scene, layout, compact=False, theme="adaptive"):
     for i, line in enumerate(textwrap.wrap(scene["claim"], 44 if compact else 110)):
         parts.append(text("body muted", 22 if compact else 36, 69 + i * 19 if compact else 80, line))
     frame = layout["transaction"] if scene["id"] == "reserve-sequence" else layout["frame"]
-    parts.extend([box("frame", frame, 12), text("cap", frame[0] + 16, frame[1] + 23, scene["frame"])])
+    transaction_on_mobile = compact and scene["id"] == "reserve-sequence"
+    caption = "One transaction" if transaction_on_mobile else scene["frame"]
+    caption_y = frame[1] + (17 if transaction_on_mobile else 23)
+    parts.extend([box("frame", frame, 12), text("cap", frame[0] + 16, caption_y, caption)])
     boxes = {}
     for i, (key, title, action, data) in enumerate(scene["nodes"]):
         rect = layout["cards"][i]

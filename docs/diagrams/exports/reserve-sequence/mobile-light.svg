@@ -7,8 +7,8 @@
 <text class="body muted" text-anchor="start" x="22" y="69">A conditional write, the hold and its</text>
 <text class="body muted" text-anchor="start" x="22" y="88">outgoing event share one Lending</text>
 <text class="body muted" text-anchor="start" x="22" y="107">transaction.</text>
-<rect class="frame" x="14" y="294" width="332" height="308" rx="12"/>
-<text class="cap" text-anchor="start" x="30" y="317">One Lending transaction</text>
+<rect class="frame" x="14" y="304" width="332" height="298" rx="12"/>
+<text class="cap" text-anchor="start" x="30" y="321">One transaction</text>
 <g id="borrower">
 <rect class="card a" x="38" y="170" width="284" height="96" rx="8"/>
 <text class="name" text-anchor="start" x="51" y="199">Borrower</text>
