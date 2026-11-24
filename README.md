@@ -40,6 +40,8 @@ The development profile supplies two member identities (`demo-borrower-a` and `d
 3. The [outbox relay](src/Modules/Lending/Delivery/) delivers the original message to the [PickupDesk inbox](src/Modules/PickupDesk/PickupDesk/Inbox/). The consumer records its result and receipt in one transaction. A later terminal state wins over a delayed placement.
 4. The [HTTP journey](tests/Journeys/borrow_a_drill.py) checks the losing response, private borrower access, the staff queue and the copy's return to circulation.
 
+Read the [delivery and recovery guide](docs/operations/messaging.md) for a real crash experiment, queue diagnostics and audited redrive. Follow the [illustrated walkthrough](docs/tour/trace-a-hold.md) for the complete path.
+
 ## Develop and test
 
 Install the SDK in [global.json](global.json). For an SDK inner loop, start the database and migrations with `docker compose up --build -d postgres migrate`, then run `dotnet run --project src/Api --launch-profile EquipmentLibrary`. Use the containerized API or the SDK host on port 5284 one at a time. The liveness endpoint is `/health`. The readiness endpoint `/ready` checks that the three module roles can reach their migrated tables.
