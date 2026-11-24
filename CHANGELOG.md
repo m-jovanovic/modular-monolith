@@ -6,6 +6,8 @@ The OpenAPI document now describes the actual success statuses, JSON bodies and 
 
 Lending now exposes typed application commands for cancellation, collection and loan renewal. The renewal decision reads the clock after PostgreSQL grants the loan lock. A renewal that waited past the due time returns a conflict, and two simultaneous requests from the same borrower can extend an eligible loan only once. The collection test also crosses the pickup deadline while a request waits for its row lock.
 
+The readiness endpoint returns 503 while a module is missing storage required by the running release. Liveness stays available throughout the upgrade. The integration tests migrate the previous database layout in both module orders.
+
 ## v1.0.0
 
 Run the .NET 11 equipment library with Docker Compose. Race two members for one barcoded copy, follow the winning hold to the librarian's queue, and take the copy through collection, renewal and return. Try the restart exercise to see a durable receipt acknowledged twice and applied once.

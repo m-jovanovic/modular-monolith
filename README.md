@@ -47,7 +47,7 @@ Read the [delivery and recovery guide](docs/operations/messaging.md) for a real 
 
 ## Develop and test
 
-Install the SDK in [global.json](global.json). For an SDK inner loop, start the database and migrations with `docker compose up --build -d postgres migrate`, then run `dotnet run --project src/Api --launch-profile EquipmentLibrary`. Use the containerized API or the SDK host on port 5284 one at a time. The liveness endpoint is `/health`. The readiness endpoint `/ready` checks that the three module roles can reach their migrated tables.
+Install the SDK in [global.json](global.json). For an SDK inner loop, start the database and migrations with `docker compose up --build -d postgres migrate`, then run `dotnet run --project src/Api --launch-profile EquipmentLibrary`. Use the containerized API or the SDK host on port 5284 one at a time. The liveness endpoint is `/health`. Each module checks its required tables and columns through its own runtime role. During a partial database upgrade, `/ready` returns 503 and `/health` continues to return 200.
 
 ```sh
 ./scripts/verify.sh
