@@ -1,10 +1,11 @@
-using EquipmentLibrary.Lending.Application.Maintenance;
-using EquipmentLibrary.Lending.Maintenance;
 using EquipmentLibrary.Lending.Application.Holds.PlaceHold;
+using EquipmentLibrary.Lending.Application.Maintenance;
 using EquipmentLibrary.Lending.Copies;
 using EquipmentLibrary.Lending.Delivery;
 using EquipmentLibrary.Lending.Holds;
 using EquipmentLibrary.Lending.Holds.Expiry;
+using EquipmentLibrary.Lending.Loans;
+using EquipmentLibrary.Lending.Maintenance;
 using EquipmentLibrary.Lending.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -38,11 +39,7 @@ public static class LendingModule
         RouteGroupBuilder lending = endpoints.MapGroup("/api/lending").WithTags("Lending");
         lending.MapCopies();
         lending.MapHolds();
-        lending.MapPost("/loans/{loanId:guid}/return", Loans.ReturnLoan.HandleAsync).WithName("ReturnLoan").RequireAuthorization("Pickup.Manage");
-        lending.MapPost("/loans/{loanId:guid}/renew", Loans.RenewLoan.HandleAsync).WithName("RenewLoan").RequireAuthorization("Borrower");
-        lending.MapGet("/loans/{loanId:guid}", Loans.GetLoan.HandleAsync).WithName("GetLoan").RequireAuthorization();
-        lending.MapGet("/me/loans", Loans.ListMyLoans.HandleAsync).WithName("ListMyLoans").RequireAuthorization("Borrower");
-        lending.MapGet("/loans/overdue", Loans.ListOverdueLoans.HandleAsync).WithName("ListOverdueLoans").RequireAuthorization("Pickup.Manage");
+        lending.MapLoans();
         lending.MapMaintenance();
         return endpoints;
     }
