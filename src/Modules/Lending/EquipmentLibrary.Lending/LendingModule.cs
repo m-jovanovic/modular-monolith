@@ -21,6 +21,7 @@ public static class LendingModule
 {
     public static IServiceCollection AddLending(this IServiceCollection services, bool runExpiryWorker = true)
     {
+        services.AddHealthChecks().AddCheck<LendingReadiness>("lending-storage");
         services.TryAddSingleton<HoldSubscriptions>();
         services.AddScoped<LendingContext>();
         services.AddScoped<IMaintenanceOrders, PostgresMaintenanceOrders>();

@@ -11,6 +11,7 @@ public static class CatalogModule
 
     public static IServiceCollection AddCatalog(this IServiceCollection services)
     {
+        services.AddHealthChecks().AddCheck<CatalogReadiness>("catalog-storage");
         services.AddScoped<ICatalogLookup, CatalogLookup>();
         services.AddScoped<CreateItem.Handler>();
         services.AddScoped<UpdateItem.Handler>();
