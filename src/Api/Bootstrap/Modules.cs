@@ -1,5 +1,6 @@
 using EquipmentLibrary.Catalog;
 using EquipmentLibrary.Lending;
+using EquipmentLibrary.Lending.Delivery;
 using EquipmentLibrary.PickupDesk;
 using Npgsql;
 
@@ -17,7 +18,10 @@ internal static class Modules
         }
 
         builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddCatalog().AddLending().AddPickupDesk(builder.Configuration.GetValue("Workers:Enabled", true));
+        bool workersEnabled = builder.Configuration.GetValue("Workers:Enabled", true);
+        builder.Services.AddCatalog().AddLending().AddPickupDesk(workersEnabled);
+        builder.Services.AddSingleton<IHoldSubscriber, PickupSubscription>();
+        builder.Services.AddHoldDelivery(workersEnabled);
     }
 
     internal static void MapLibraryModules(this WebApplication app)

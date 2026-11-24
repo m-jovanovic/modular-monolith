@@ -6,5 +6,6 @@
     <ProjectReference Include="..\Modules\Catalog\Implementation\EquipmentLibrary.Catalog.csproj" />
     <ProjectReference Include="..\Modules\Lending\EquipmentLibrary.Lending\EquipmentLibrary.Lending.csproj" />
     <ProjectReference Include="..\Modules\PickupDesk\PickupDesk\EquipmentLibrary.PickupDesk.csproj" />
+    <ProjectReference Include="..\Modules\Lending\Delivery\EquipmentLibrary.Lending.Delivery.csproj" />
   </ItemGroup>
 </Project>

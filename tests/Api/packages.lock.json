@@ -342,6 +342,7 @@
         "dependencies": {
           "EquipmentLibrary.Catalog": "[1.0.0, )",
           "EquipmentLibrary.Lending": "[1.0.0, )",
+          "EquipmentLibrary.Lending.Delivery": "[1.0.0, )",
           "EquipmentLibrary.PickupDesk": "[1.0.0, )",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[11.0.0, )"
         }
@@ -360,6 +361,13 @@
         "type": "Project",
         "dependencies": {
           "EquipmentLibrary.Catalog.Contracts": "[1.0.0, )",
+          "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
+          "Npgsql": "[11.0.0, )"
+        }
+      },
+      "equipmentlibrary.lending.delivery": {
+        "type": "Project",
+        "dependencies": {
           "EquipmentLibrary.Lending.IntegrationEvents": "[1.0.0, )",
           "Npgsql": "[11.0.0, )"
         }
