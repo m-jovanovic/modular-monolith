@@ -14,7 +14,11 @@ namespace EquipmentLibrary.Catalog.Tests;
 
 public sealed class CatalogFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer postgres = new PostgreSqlBuilder("postgres:18-alpine").Build();
+    private readonly string databaseName = $"catalog_test_{Guid.NewGuid():N}";
+    private readonly string runtimeRole = $"catalog_test_role_{Guid.NewGuid():N}";
+    private readonly string password = Guid.NewGuid().ToString("N");
+    private PostgreSqlContainer? postgres;
+    private NpgsqlDataSource? control;
     private WebApplication? application;
 
     public HttpClient Public { get; private set; } = null!;
@@ -22,14 +26,30 @@ public sealed class CatalogFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await postgres.StartAsync();
-        await using var admin = NpgsqlDataSource.Create(postgres.GetConnectionString());
-        await using NpgsqlCommand bootstrap = admin.CreateCommand("""
-            CREATE ROLE catalog_runtime LOGIN PASSWORD 'catalog_test_only';
+        string? server = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN");
+        if (string.IsNullOrWhiteSpace(server))
+        {
+            postgres = new PostgreSqlBuilder("postgres:17-alpine").Build();
+            using var startup = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            await postgres.StartAsync(startup.Token);
+            server = postgres.GetConnectionString();
+        }
+
+        // A separate database and runtime role keep parallel test runs isolated, including on a shared development server.
+        control = NpgsqlDataSource.Create(server);
+        await using (NpgsqlCommand createDatabase = control.CreateCommand($"CREATE DATABASE {databaseName}"))
+        {
+            await createDatabase.ExecuteNonQueryAsync();
+        }
+
+        var settings = new NpgsqlConnectionStringBuilder(server) { Database = databaseName };
+        await using var admin = NpgsqlDataSource.Create(settings.ConnectionString);
+        await using NpgsqlCommand bootstrap = admin.CreateCommand($"""
+            CREATE ROLE {runtimeRole} LOGIN PASSWORD '{password}';
             CREATE SCHEMA catalog;
-            GRANT USAGE ON SCHEMA catalog TO catalog_runtime;
+            GRANT USAGE ON SCHEMA catalog TO {runtimeRole};
             ALTER DEFAULT PRIVILEGES IN SCHEMA catalog
-                GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO catalog_runtime;
+                GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {runtimeRole};
             """);
         await bootstrap.ExecuteNonQueryAsync();
 
@@ -39,9 +59,10 @@ public sealed class CatalogFixture : IAsyncLifetime
             await migrate.ExecuteNonQueryAsync();
         }
 
-        var runtime = new NpgsqlConnectionStringBuilder(postgres.GetConnectionString())
+        var runtime = new NpgsqlConnectionStringBuilder(settings.ConnectionString)
         {
-            Username = "catalog_runtime", Password = "catalog_test_only"
+            Username = runtimeRole,
+            Password = password
         };
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
@@ -68,7 +89,19 @@ public sealed class CatalogFixture : IAsyncLifetime
             await application.DisposeAsync();
         }
 
-        await postgres.DisposeAsync();
+        if (control is not null)
+        {
+            await using NpgsqlCommand dropDatabase = control.CreateCommand($"DROP DATABASE IF EXISTS {databaseName} WITH (FORCE)");
+            await dropDatabase.ExecuteNonQueryAsync();
+            await using NpgsqlCommand dropRole = control.CreateCommand($"DROP ROLE IF EXISTS {runtimeRole}");
+            await dropRole.ExecuteNonQueryAsync();
+            await control.DisposeAsync();
+        }
+
+        if (postgres is not null)
+        {
+            await postgres.DisposeAsync();
+        }
     }
 
     private sealed class FixtureAuthentication(
@@ -96,3 +129,6 @@ public sealed class CatalogFixture : IAsyncLifetime
         }
     }
 }
+
+[CollectionDefinition(nameof(CatalogFixture))]
+public sealed class CatalogCollection : ICollectionFixture<CatalogFixture>;

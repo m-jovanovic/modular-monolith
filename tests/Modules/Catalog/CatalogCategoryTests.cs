@@ -5,7 +5,8 @@ using Xunit;
 
 namespace EquipmentLibrary.Catalog.Tests;
 
-public sealed class CatalogCategoryTests(CatalogFixture app) : IClassFixture<CatalogFixture>
+[Collection(nameof(CatalogFixture))]
+public sealed class CatalogCategoryTests(CatalogFixture app)
 {
     private const string Categories = "/api/catalog/categories";
 
