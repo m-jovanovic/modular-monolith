@@ -27,5 +27,6 @@ internal static class Modules
     internal static void MapLibraryModules(this WebApplication app)
     {
         app.MapCatalog().MapLending().MapPickupDesk();
+        app.MapDeliveryOperations();
     }
 }
