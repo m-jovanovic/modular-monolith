@@ -1,0 +1,8 @@
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":1,"type":"copy-enrolled","schemaVersion":1,"data":{"assetTag":"DRILL-018"}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":2,"type":"hold-placed","schemaVersion":1,"data":{}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":3,"type":"hold-collected","schemaVersion":1,"data":{}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":4,"type":"loan-returned","schemaVersion":1,"data":{}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":5,"type":"barcode-corrected","schemaVersion":2,"data":{"previousBarcode":"DRILL-018","barcode":"DRILL-081","reason":"Transposed digits at intake"}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":6,"type":"hold-placed","schemaVersion":1,"data":{}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":7,"type":"hold-cancelled","schemaVersion":2,"data":{"reason":"expired"}}
+{"copyId":"32d548ed-f11a-45c8-aece-24082fd98041","version":8,"type":"copy-retired","schemaVersion":1,"data":{}}
