@@ -6,18 +6,18 @@ using Microsoft.Extensions.Logging;
 
 namespace EquipmentLibrary.Lending.Delivery;
 
-internal sealed partial class HoldRelay(OutboxStore store, HoldSubscriptions subscriptions, ILogger<HoldRelay> logger)
+internal sealed partial class HoldRelay(OutboxStore store, HoldSubscriptions subscriptions, ILogger<HoldRelay> logger) : IHoldDispatcher
 {
     private static readonly ActivitySource Activities = new("EquipmentLibrary.Lending.Outbox");
     private static readonly Meter Meter = new("EquipmentLibrary.Lending.Outbox");
     private static readonly Counter<long> Deliveries = Meter.CreateCounter<long>("equipment_library.outbox.deliveries");
 
-    internal async Task<bool> DeliverNextAsync(CancellationToken cancellationToken)
+    public async Task<HoldDispatchOutcome> DeliverNextAsync(CancellationToken cancellationToken)
     {
         PendingDelivery? item = await store.ClaimAsync(cancellationToken);
         if (item is null)
         {
-            return false;
+            return HoldDispatchOutcome.Idle;
         }
 
         ActivityContext.TryParse(item.TraceParent, null, out ActivityContext parent);
@@ -36,19 +36,27 @@ internal sealed partial class HoldRelay(OutboxStore store, HoldSubscriptions sub
                 await subscriptions.Resolve(name).AcceptAsync(message, cancellationToken);
             }
 
-            await store.CompleteAsync(item, cancellationToken);
+            if (!await store.CompleteAsync(item, cancellationToken))
+            {
+                return HoldDispatchOutcome.LeaseLost;
+            }
+
             Deliveries.Add(1, new KeyValuePair<string, object?>("outcome", "acknowledged"));
             Acknowledged(logger, item.Id, message.Data.HoldId);
+            return HoldDispatchOutcome.Delivered;
         }
         catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
             activity?.SetStatus(ActivityStatusCode.Error);
-            await store.FailAsync(item, exception, cancellationToken);
+            if (!await store.FailAsync(item, exception, cancellationToken))
+            {
+                return HoldDispatchOutcome.LeaseLost;
+            }
+
             Deliveries.Add(1, new KeyValuePair<string, object?>("outcome", "failed"));
             DeliveryFailed(logger, item.Id, item.Failures + 1, exception);
+            return HoldDispatchOutcome.Failed;
         }
-
-        return true;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Acknowledged hold message {MessageId} for hold {HoldId}")]

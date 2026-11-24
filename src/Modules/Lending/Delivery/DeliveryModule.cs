@@ -12,7 +12,7 @@ public static class DeliveryModule
     {
         services.TryAddSingleton<HoldSubscriptions>();
         services.AddSingleton<OutboxStore>();
-        services.AddSingleton<HoldRelay>();
+        services.AddSingleton<IHoldDispatcher, HoldRelay>();
         if (runWorker)
         {
             services.AddHostedService<RelayWorker>();
@@ -22,7 +22,7 @@ public static class DeliveryModule
     }
 }
 
-internal sealed partial class RelayWorker(HoldRelay relay, ILogger<RelayWorker> logger) : BackgroundService
+internal sealed partial class RelayWorker(IHoldDispatcher relay, ILogger<RelayWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -30,7 +30,7 @@ internal sealed partial class RelayWorker(HoldRelay relay, ILogger<RelayWorker> 
         {
             try
             {
-                if (!await relay.DeliverNextAsync(stoppingToken))
+                if (await relay.DeliverNextAsync(stoppingToken) == HoldDispatchOutcome.Idle)
                 {
                     await Task.Delay(TimeSpan.FromMilliseconds(250), stoppingToken);
                 }
