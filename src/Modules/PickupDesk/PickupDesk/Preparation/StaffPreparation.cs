@@ -32,4 +32,52 @@ internal sealed class StaffPreparation(Guid? assignedTo, DateTimeOffset? readyAt
         AssignedTo = null;
         return null;
     }
+
+    internal string? MarkReady(Guid staffId, DateTimeOffset now)
+    {
+        if (AssignedTo != staffId)
+        {
+            return "pickup-not-assigned-to-you";
+        }
+
+        if (Issue is not null)
+        {
+            return "pickup-has-open-issue";
+        }
+
+        ReadyAt ??= now;
+        return null;
+    }
+
+    internal string? ReportIssue(Guid staffId, string reason)
+    {
+        if (AssignedTo != staffId)
+        {
+            return "pickup-not-assigned-to-you";
+        }
+
+        if (ReadyAt.HasValue || Issue is not null)
+        {
+            return "pickup-preparation-in-progress";
+        }
+
+        Issue = reason;
+        return null;
+    }
+
+    internal string? ResolveIssue(Guid staffId)
+    {
+        if (AssignedTo != staffId)
+        {
+            return "pickup-not-assigned-to-you";
+        }
+
+        if (Issue is null)
+        {
+            return "pickup-has-no-issue";
+        }
+
+        Issue = null;
+        return null;
+    }
 }
