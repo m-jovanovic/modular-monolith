@@ -19,10 +19,10 @@ internal static class GetHold
         }
 
         await using NpgsqlCommand find = lending.DataSource.CreateCommand("""
-            SELECT id, copy_id, state, borrower_id FROM lending.holds WHERE id = $1
+            SELECT id, copy_id, state, placed_at, expired, borrower_id FROM lending.holds WHERE id = $1
             """).Bind(holdId);
         OwnedHold? hold = await find.ReadOneAsync(
-            r => new OwnedHold(HoldView.Read(r), r.GetGuid(3)), cancellationToken);
+            r => new OwnedHold(HoldView.Read(r), r.GetGuid(5)), cancellationToken);
         if (hold is null)
         {
             return LendingErrors.Problem(404, "hold-not-found", "This hold does not exist.");

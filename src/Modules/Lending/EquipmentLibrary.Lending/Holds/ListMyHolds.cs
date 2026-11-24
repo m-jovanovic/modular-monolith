@@ -21,7 +21,7 @@ internal static class ListMyHolds
         }
 
         await using NpgsqlCommand find = lending.DataSource.CreateCommand("""
-            SELECT id, copy_id, state FROM lending.holds WHERE borrower_id = $1
+            SELECT id, copy_id, state, placed_at, expired FROM lending.holds WHERE borrower_id = $1
             ORDER BY placed_at DESC, id LIMIT $2 OFFSET $3
             """).Bind(borrowerId, limit ?? 25, offset ?? 0);
         List<HoldView> items = await find.ReadListAsync(HoldView.Read, cancellationToken);
