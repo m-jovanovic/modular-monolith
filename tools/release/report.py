@@ -7,7 +7,7 @@ from zipfile import ZipFile
 
 
 def report(commit, tag, run, jobs, directory):
-    matching = [job for job in jobs["jobs"] if job["name"] == "verify" and job["conclusion"] == "success"]
+    matching = [job for job in jobs["jobs"] if job["name"] == "verify" and job["head_sha"] == commit and job["conclusion"] == "success"]
     if len(matching) != 1:
         raise ValueError("Expected one successful verification job in this run.")
     steps = [

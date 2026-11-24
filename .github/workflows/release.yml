@@ -40,6 +40,8 @@ jobs:
         run: |
           dotnet restore tests/Messaging/TransportEvaluation --locked-mode
           dotnet run -c Release --no-restore --project tests/Messaging/TransportEvaluation
+      - run: ./labs/copy-history/run.sh
+      - run: python3 labs/pickupdesk-extraction/run.py
       - run: python3 tests/AI/verify.py
       - run: python3 tools/reference/render_diagrams.py --check
       - run: npm ci --prefix tools/reference/raster --ignore-scripts
@@ -72,7 +74,7 @@ jobs:
           cd "$output"
           sha256sum -c equipment-library-reference.zip.sha256
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs" > "$RUNNER_TEMP/verified-jobs.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" > "$RUNNER_TEMP/verified-jobs.json"
           python3 "$GITHUB_WORKSPACE/tools/release/report.py" --commit "$commit" --tag "$TAG" --run "$run_url" \
             --jobs "$RUNNER_TEMP/verified-jobs.json" --directory "$output"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
