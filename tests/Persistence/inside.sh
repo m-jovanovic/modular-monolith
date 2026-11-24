@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
-cd /library-check
-export PGHOST=127.0.0.1 PGUSER=postgres PGPASSWORD=fixture-only
+cd "$(dirname "$0")/../.."
+export PGHOST="${PGHOST:-127.0.0.1}" PGUSER=postgres PGPASSWORD=fixture-only
 export CATALOG_PASSWORD=catalog-fixture LENDING_PASSWORD=lending-fixture PICKUP_PASSWORD=pickup-fixture
 createdb equipment_upgrade
 createdb equipment_empty
