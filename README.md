@@ -55,3 +55,5 @@ Install the SDK in [global.json](global.json). For an SDK inner loop, start the 
 Module tests use disposable PostgreSQL databases. The [architecture checks](tests/Architecture/) enforce project and compiled dependencies. [AGENTS.md](AGENTS.md) maps a feature to its owner, public contract and verification commands. The [charter](docs/charter.md) and [contributing guide](CONTRIBUTING.md) explain the project scope.
 
 Milan Jovanović's Evently course informed the coding conventions. Kamil Grzybek's work influenced the use of domain language, diagrams, decision records and architecture tests. [Modular Monolith Architecture course](https://milanjovanovic.tech/modular-monolith-architecture) · [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd)
+
+The [source-linked learning guide](docs/README.md) connects the decisions, diagrams, concurrency proof, restart exercise and measured AI changes.
