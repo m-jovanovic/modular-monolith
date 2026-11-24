@@ -1,6 +1,7 @@
 using EquipmentLibrary.PickupDesk.Contracts;
 using EquipmentLibrary.PickupDesk.Features;
 using EquipmentLibrary.PickupDesk.Inbox;
+using EquipmentLibrary.PickupDesk.Preparation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ public static class PickupDeskModule
     {
         services.AddSingleton<IPickupInbox, PickupInbox>();
         services.AddSingleton<ProcessPickupInbox>();
+        services.AddSingleton<ChangePreparation>();
         if (runWorker)
         {
             services.AddHostedService<PickupWorker>();
@@ -26,6 +28,8 @@ public static class PickupDeskModule
         RouteGroupBuilder group = endpoints.MapGroup("/api/pickup-desk").RequireAuthorization("Pickup.Manage");
         group.MapGet("/queue", ListPickups.HandleAsync);
         group.MapGet("/queue/{holdId:guid}", GetPickup.HandleAsync);
+        group.MapPost("/queue/{holdId:guid}/claim", ClaimPickup.HandleAsync);
+        group.MapPost("/queue/{holdId:guid}/release", ReleasePickup.HandleAsync);
         return endpoints;
     }
 }
