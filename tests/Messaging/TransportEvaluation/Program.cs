@@ -1,0 +1,8 @@
+using EquipmentLibrary.TransportEvaluation;
+using Npgsql;
+
+string connectionString = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN")
+    ?? throw new InvalidOperationException("Set EQLIB_TEST_PG_ADMIN to a PostgreSQL admin connection for isolated database creation.");
+await using var server = NpgsqlDataSource.Create(connectionString);
+await using ProbeDatabase database = await ProbeDatabase.CreateAsync(server, connectionString);
+await TransportProbe.RunAsync(database);
