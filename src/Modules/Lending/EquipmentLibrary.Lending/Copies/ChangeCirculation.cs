@@ -35,6 +35,6 @@ internal static class ChangeCirculation
         }
 
         return current.State == to ? Results.Ok(current)
-            : LendingErrors.Problem(409, "copy-in-use", "An active hold or loan is using this copy.");
+            : LendingErrors.Problem(409, "copy-in-use", "The current copy state prevents this circulation change.");
     }
 }
