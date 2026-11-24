@@ -21,6 +21,8 @@ jobs:
         run: python3 tests/Journeys/borrow_a_drill.py
       - name: Kill the host after durable receipt and verify recovery
         run: python3 tests/Journeys/recover_delivery.py
+      - name: Restore the pickup projection from a full PostgreSQL backup
+        run: python3 tests/Journeys/restore_pickup.py
       - name: Verify role isolation and upgrades
         run: ./tests/Persistence/verify.sh
       - name: Collect diagnostics

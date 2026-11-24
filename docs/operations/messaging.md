@@ -40,3 +40,5 @@ docker compose down
 ## Restore scope
 
 The sample retains its event receipts, completion records and terminal sequences. A full database loss needs a consistent PostgreSQL backup. Restoring only recent events into an empty pickup schema could lose a long-lived active hold. Keep the module schemas, receipts, outbox, migration ledger and role configuration together when rehearsing a restore. Recheck the pickup queue and delivery status before accepting staff traffic.
+
+Run `python3 tests/Journeys/restore_pickup.py` against the running demo stack. The rehearsal creates two real holds, waits for their three durable receipts, takes a full backup and uses `pg_restore` in a fresh database on the same PostgreSQL cluster. A pickup-role query must still show the active hold even when the retained event window starts after its placement. The restored database is removed after verification. Disaster recovery on a replacement cluster also requires the module roles and their grants.
