@@ -178,13 +178,18 @@ public sealed class PickupDeskTests(PickupFixture fixture) : IClassFixture<Picku
             """);
         try
         {
-            for (int attempt = 1; attempt <= 5; attempt++)
+            DateTimeOffset attemptAt = await fixture.AvailableAtAsync(held.MessageId);
+            foreach (int delaySeconds in new[] { 2, 4, 8, 16, 32 })
             {
-                Assert.True(await fixture.Worker.ProcessNextAsync(default));
+                Assert.True(await fixture.WorkerAt(attemptAt).ProcessNextAsync(default));
                 Assert.Equal(0, await fixture.CountAsync("SELECT count(*) FROM pickup_desk.holds"));
-                Assert.False(await fixture.Worker.ProcessNextAsync(default));
-                await fixture.ExecuteAsync("UPDATE pickup_desk.inbox SET available_at = now() WHERE completed_at IS NULL");
+                DateTimeOffset retryAt = attemptAt.AddSeconds(delaySeconds);
+                Assert.Equal(retryAt, await fixture.AvailableAtAsync(held.MessageId));
+                Assert.False(await fixture.WorkerAt(retryAt.AddMicroseconds(-1)).ProcessNextAsync(default));
+                attemptAt = retryAt;
             }
+
+            Assert.False(await fixture.WorkerAt(attemptAt).ProcessNextAsync(default));
         }
         finally
         {
