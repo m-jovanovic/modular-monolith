@@ -1,0 +1,11 @@
+{
+  "name": "equipment-library-diagrams",
+  "private": true,
+  "scripts": {
+    "render": "node render.mjs",
+    "check": "node render.mjs --check"
+  },
+  "dependencies": {
+    "@resvg/resvg-wasm": "2.6.2"
+  }
+}
