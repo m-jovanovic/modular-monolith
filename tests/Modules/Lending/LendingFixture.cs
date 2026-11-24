@@ -13,7 +13,7 @@ using Xunit;
 
 namespace EquipmentLibrary.Lending.Tests;
 
-public sealed class LendingFixture : IAsyncLifetime
+public class LendingFixture : IAsyncLifetime
 {
     public static readonly Guid CatalogItemId = Guid.Parse("f22a8917-a47f-48bf-91f3-01f566c2d78f");
     private static readonly string[] Permissions = ["Lending.Enroll", "Pickup.Manage", "Staff", "Borrower"];
@@ -24,7 +24,11 @@ public sealed class LendingFixture : IAsyncLifetime
     internal ScenarioClock Clock { get; } = new();
     public NpgsqlDataSource Admin { get; private set; } = null!;
 
-    public async Task InitializeAsync()
+    internal IServiceProvider Services => _app.Services;
+
+    protected virtual void ConfigureServices(IServiceCollection services) { }
+
+    public virtual async Task InitializeAsync()
     {
         string? external = Environment.GetEnvironmentVariable("EQLIB_TEST_PG_ADMIN");
         string connectionString;
@@ -67,7 +71,8 @@ public sealed class LendingFixture : IAsyncLifetime
         builder.Services.AddKeyedSingleton("Lending", (_, _) => NpgsqlDataSource.Create(runtime.ConnectionString));
         builder.Services.AddSingleton<TimeProvider>(Clock);
         builder.Services.AddSingleton<ICatalogLookup, KnownCatalog>();
-        builder.Services.AddLending();
+        builder.Services.AddLending(runExpiryWorker: false);
+        ConfigureServices(builder.Services);
         builder.Services.AddAuthentication("Fixture").AddScheme<AuthenticationSchemeOptions, FixtureIdentity>("Fixture", _ => { });
         builder.Services.AddAuthorization(options =>
         {
