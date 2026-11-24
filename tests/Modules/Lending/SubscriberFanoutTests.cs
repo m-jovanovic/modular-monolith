@@ -13,7 +13,7 @@ public sealed class SubscriberFanoutTests(FanoutFixture fixture) : IClassFixture
     [Fact]
     public async Task DispatchSpanLinksTheHttpTraceToTheStableHoldAndMessageIds()
     {
-        ActivityTraceId trace = ActivityTraceId.CreateRandom();
+        var trace = ActivityTraceId.CreateRandom();
         Activity? observed = null;
         using var listener = new ActivityListener
         {
