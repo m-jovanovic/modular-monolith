@@ -34,5 +34,24 @@ services:
       PICKUP_PASSWORD: ${LIBRARY_PICKUP_PASSWORD:-local-pickup}
     entrypoint: ["/library/infra/postgres/migrate.sh"]
 
+  api:
+    build: .
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__Catalog: Host=postgres;Database=equipment;Username=catalog_app;Password=${LIBRARY_CATALOG_PASSWORD:-local-catalog}
+      ConnectionStrings__Lending: Host=postgres;Database=equipment;Username=lending_app;Password=${LIBRARY_LENDING_PASSWORD:-local-lending}
+      ConnectionStrings__PickupDesk: Host=postgres;Database=equipment;Username=pickup_desk_app;Password=${LIBRARY_PICKUP_PASSWORD:-local-pickup}
+    ports:
+      - "127.0.0.1:${LIBRARY_HTTP_PORT:-5284}:8080"
+    healthcheck:
+      test: ["CMD", "bash", "-ec", "exec 3<>/dev/tcp/127.0.0.1/8080; printf 'GET /ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3; read -r response <&3; [[ $$response == *' 200 '* ]]"]
+      interval: 3s
+      timeout: 4s
+      retries: 20
+
 volumes:
   library-data:
