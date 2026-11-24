@@ -25,6 +25,8 @@ public static class LendingModule
         lending.MapPost("/holds", Holds.PlaceHold.HandleAsync).RequireAuthorization("Borrower");
         lending.MapGet("/holds/{holdId:guid}", Holds.GetHold.HandleAsync).RequireAuthorization();
         lending.MapGet("/me/holds", Holds.ListMyHolds.HandleAsync).RequireAuthorization("Borrower");
+        lending.MapPost("/holds/{holdId:guid}/cancel", Holds.CloseHold.CancelAsync).RequireAuthorization("Borrower");
+        lending.MapPost("/holds/{holdId:guid}/collect", Holds.CloseHold.CollectAsync).RequireAuthorization("Pickup.Manage");
         return endpoints;
     }
 }
