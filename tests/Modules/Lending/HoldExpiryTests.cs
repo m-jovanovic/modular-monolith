@@ -35,7 +35,9 @@ public sealed class HoldExpiryTests(LendingFixture fixture) : IDisposable
         int[] counts = await Task.WhenAll(SweepAsync(staff), SweepAsync(staff));
         using HttpResponseMessage collection = await competingCollection;
         Assert.Equal(HttpStatusCode.Conflict, collection.StatusCode);
-        Assert.Equal(1, counts.Sum());
+        // Both SKIP LOCKED sweeps can run while the collector holds the row.
+        int expiredAfterCollection = await SweepAsync(staff);
+        Assert.Equal(1, counts.Sum() + expiredAfterCollection);
         Assert.Equal(0, await SweepAsync(staff));
 
         using HttpResponseMessage hold = await member.GetAsync($"/api/lending/holds/{holdId}");
