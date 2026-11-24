@@ -1,0 +1,15 @@
+using EquipmentLibrary.Catalog.Contracts;
+
+namespace EquipmentLibrary.Catalog.Items;
+
+internal static class GetItem
+{
+    internal static void MapEndpoint(RouteGroupBuilder items) =>
+        items.MapGet("/{itemId:guid}", Execute).AllowAnonymous();
+
+    private static async Task<IResult> Execute(Guid itemId, ICatalogLookup catalog, CancellationToken cancellationToken)
+    {
+        CatalogItemDescription? item = await catalog.GetItemAsync(itemId, cancellationToken);
+        return item is null ? CatalogProblem.MissingItem() : Results.Ok(item);
+    }
+}
