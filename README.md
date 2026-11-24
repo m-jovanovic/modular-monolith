@@ -2,6 +2,8 @@
 
 A community library has one cordless drill left. Two members reserve it at the same time. Run this reference to see one member get the hold, the other receive a conflict, and a librarian prepare exactly one pickup. The API, messaging workers and staff queue run in one ASP.NET Core process. PostgreSQL gives each business module its own schema and credentials.
 
+![Catalog, Lending and PickupDesk and their owned schemas](docs/diagrams/module-map.svg)
+
 ## Run the library
 
 With Docker Compose and Python 3 installed, run these commands from the root of a fresh clone.
@@ -11,7 +13,7 @@ docker compose up -d --build --wait
 python3 tests/Journeys/borrow_a_drill.py
 ```
 
-The walkthrough creates a catalog item and a uniquely barcoded copy, sends **two concurrent HTTP reservation requests**, then exercises staff preparation, collection, renewal, return and cancellation. It prints the winning hold ID. Run it again to create another copy. The API listens on http://127.0.0.1:5284. If that port is occupied, set `LIBRARY_HTTP_PORT` when starting Compose and pass the corresponding `--base` to the walkthrough. Run `docker compose down` to stop the stack and keep its data.
+The walkthrough creates a catalog item and a uniquely barcoded copy, sends **two concurrent HTTP reservation requests**, then exercises staff preparation, collection, renewal, return and cancellation. It prints the winning hold ID. Run it again to create another copy. The API listens on http://127.0.0.1:5284. Open `/openapi/v1.json` to inspect its routes. If that port is occupied, set `LIBRARY_HTTP_PORT` when starting Compose and pass the corresponding `--base` to the walkthrough. Run `docker compose down` to stop the stack and keep its data.
 
 ## Explore the use cases
 

@@ -7,6 +7,7 @@ internal static class ApiComposition
     internal static void AddApi(this IServiceCollection services)
     {
         services.AddProblemDetails();
+        services.AddOpenApi();
         services.AddHealthChecks().AddCheck<DatabaseReadiness>("module-storage");
     }
 
@@ -14,5 +15,6 @@ internal static class ApiComposition
     {
         app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false });
         app.MapHealthChecks("/ready");
+        app.MapOpenApi();
     }
 }
