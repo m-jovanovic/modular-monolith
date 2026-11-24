@@ -1,0 +1,93 @@
+{
+  "recorded": "2026-11-24",
+  "attempts": [
+    {
+      "task": "barcode",
+      "tool": "Codex CLI 0.171.0-alpha.13.2",
+      "model": "gpt-6.2-astra",
+      "modelSelection": "configured default",
+      "patchAttempts": 1,
+      "setupFailures": 0,
+      "patchSha256": "19dd834ce43dd96ccdc1205c9d530f1c64ba8b2a6379787e712dc793f41b1e1b",
+      "prompt": "tasks/barcode.txt",
+      "transcript": "evidence/barcode-transcript.json",
+      "grade": {
+        "task": "barcode",
+        "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+        "changedPaths": [
+          "src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs",
+          "tests/Modules/PickupDesk/BarcodeFilterTests.cs"
+        ],
+        "scope": true,
+        "boundaries": true,
+        "behavior": true,
+        "testsPassed": 23,
+        "testsTotal": 23,
+        "passed": true
+      },
+      "baselineGrade": {
+        "task": "barcode",
+        "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+        "changedPaths": [],
+        "scope": false,
+        "boundaries": true,
+        "behavior": false,
+        "testsPassed": 11,
+        "testsTotal": 15,
+        "passed": false
+      },
+      "humanReview": "pending"
+    },
+    {
+      "task": "rollup",
+      "tool": "Codex CLI 0.171.0-alpha.13.2",
+      "model": "gpt-6.2-astra",
+      "modelSelection": "explicit CLI model",
+      "patchAttempts": 1,
+      "setupFailures": 1,
+      "patchSha256": "b9ec6b0a766bd07d0126ac97fe97651d59d6bef749482ac812333374932f48a1",
+      "prompt": "tasks/rollup.txt",
+      "transcript": "evidence/rollup-transcript.json",
+      "grade": {
+        "task": "rollup",
+        "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+        "changedPaths": [
+          "src/Modules/PickupDesk/PickupDesk/Queries/HoldRollup.cs",
+          "tests/Modules/PickupDesk/HoldRollupTests.cs"
+        ],
+        "scope": true,
+        "boundaries": true,
+        "behavior": true,
+        "testsPassed": 14,
+        "testsTotal": 14,
+        "passed": true
+      },
+      "baselineGrade": {
+        "task": "rollup",
+        "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+        "changedPaths": [],
+        "scope": false,
+        "boundaries": true,
+        "behavior": false,
+        "testsPassed": 0,
+        "testsTotal": 0,
+        "passed": false
+      },
+      "humanReview": "pending"
+    }
+  ],
+  "negativeControl": {
+    "task": "barcode",
+    "baseline": "57879340fd4c114624f2c9dd6bfaa9d550e3efbe",
+    "changedPaths": [
+      "src/Modules/PickupDesk/PickupDesk/Features/ListPickups.cs"
+    ],
+    "scope": true,
+    "boundaries": false,
+    "behavior": null,
+    "testsPassed": 0,
+    "testsTotal": 0,
+    "reason": "foreign schema or implementation",
+    "passed": false
+  }
+}
