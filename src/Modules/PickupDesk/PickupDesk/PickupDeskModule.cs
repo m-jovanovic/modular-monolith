@@ -14,6 +14,7 @@ public static class PickupDeskModule
 {
     public static IServiceCollection AddPickupDesk(this IServiceCollection services, bool runWorker = true)
     {
+        services.AddHealthChecks().AddCheck<PickupDeskReadiness>("pickup-desk-storage");
         services.AddSingleton<IPickupInbox, PickupInbox>();
         services.AddSingleton<ProcessPickupInbox>();
         services.AddSingleton<ChangePreparation>();

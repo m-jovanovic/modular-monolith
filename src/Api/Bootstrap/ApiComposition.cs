@@ -8,7 +8,6 @@ internal static class ApiComposition
     {
         services.AddProblemDetails();
         services.AddLibraryOpenApi();
-        services.AddHealthChecks().AddCheck<DatabaseReadiness>("module-storage");
     }
 
     internal static void MapApi(this WebApplication app)
