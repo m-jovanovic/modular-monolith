@@ -9,7 +9,7 @@ public sealed class IndependentRollup
     [Fact]
     public void CountUsesNewestSnapshotForEachHoldEvenWhenACopyIsReused()
     {
-        Guid copy = Guid.NewGuid();
+        var copy = Guid.NewGuid();
         HoldLifecycleEvent first = Place(copy);
         HoldLifecycleEvent next = Place(copy);
         HoldLifecycleEvent third = Place(Guid.NewGuid());
