@@ -7,7 +7,7 @@ internal static class ApiComposition
     internal static void AddApi(this IServiceCollection services)
     {
         services.AddProblemDetails();
-        services.AddOpenApi();
+        services.AddLibraryOpenApi();
         services.AddHealthChecks().AddCheck<DatabaseReadiness>("module-storage");
     }
 

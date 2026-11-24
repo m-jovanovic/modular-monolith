@@ -29,7 +29,11 @@ public sealed class OpenApiTests
         }
 
         Assert.True(paths.GetProperty("/api/catalog/items").TryGetProperty("post", out _));
-        Assert.True(paths.GetProperty("/api/lending/holds").TryGetProperty("post", out _));
+        JsonElement place = paths.GetProperty("/api/lending/holds").GetProperty("post");
+        Assert.Contains("Borrower", place.GetProperty("description").GetString(), StringComparison.Ordinal);
+        Assert.True(place.GetProperty("security")[0].TryGetProperty("LibraryBearer", out _));
+        JsonElement browse = paths.GetProperty("/api/catalog/items").GetProperty("get");
+        Assert.False(browse.TryGetProperty("security", out _));
         Assert.True(paths.GetProperty("/api/pickup-desk/queue").TryGetProperty("get", out _));
     }
 }
