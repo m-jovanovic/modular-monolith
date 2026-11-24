@@ -40,7 +40,8 @@ The development profile supplies two member identities (`demo-borrower-a` and `d
 1. The [host](src/Api/Program.cs) composes the modules. Lending uses the [public Catalog lookup](src/Modules/Catalog/Contracts/) when enrolling a copy.
 2. [PlaceHoldCommandHandler](src/Modules/Lending/Application/Holds/PlaceHold/PlaceHoldCommand.cs) takes the authenticated borrower and a copy ID. Its [PostgreSQL adapter](src/Modules/Lending/EquipmentLibrary.Lending/Holds/PostgresHoldReservationStore.cs) claims the copy and commits the hold and outgoing event together.
 3. The [outbox relay](src/Modules/Lending/Delivery/) delivers the original message to the [PickupDesk inbox](src/Modules/PickupDesk/PickupDesk/Inbox/). The consumer records its result and receipt in one transaction. A later terminal state wins over a delayed placement.
-4. The [HTTP journey](tests/Journeys/borrow_a_drill.py) checks the losing response, private borrower access, the staff queue and the copy's return to circulation.
+4. The [cancellation and collection commands](src/Modules/Lending/Application/Holds/CloseHold/CloseHoldCommands.cs) close the winning hold. The [loan renewal command](src/Modules/Lending/Application/Loans/RenewLoan/RenewLoanCommand.cs) checks the borrower's eligibility against the locked loan.
+5. The [HTTP journey](tests/Journeys/borrow_a_drill.py) checks the losing response, private borrower access, the staff queue and the copy's return to circulation.
 
 Read the [delivery and recovery guide](docs/operations/messaging.md) for a real crash experiment, queue diagnostics and audited redrive. Follow the [illustrated walkthrough](docs/tour/trace-a-hold.md) for the complete path.
 

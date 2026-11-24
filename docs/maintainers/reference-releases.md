@@ -21,6 +21,6 @@ The [manifest schema](../../reference/schema/manifest.v1.json) defines version 1
 
 ## Publish from a tested commit
 
-A maintainer reviews notices, the changelog and test results, tags the approved revision and pushes the tag. The [release workflow](../../.github/workflows/release.yml) reruns the suite, architecture and analyzer probes, PostgreSQL grants, concurrent borrower and restart journeys, and benchmark controls against the tagged tree. It publishes the ZIP, its detached digest and the verification record. Retrieve the three assets together with `gh release download TAG` and check that the manifest commit matches `git rev-parse 'TAG^{commit}'`.
+A maintainer reviews notices, the changelog and test results, tags the approved revision and pushes the tag. The [release workflow](../../.github/workflows/release.yml) reruns the suite, architecture and analyzer probes, PostgreSQL grants, concurrent borrower and restart journeys, and benchmark controls against the tagged tree. It publishes the ZIP, its detached digest, the running host’s OpenAPI document and the verification record. Retrieve the four assets together with `gh release download TAG` and check that the manifest commit matches `git rev-parse 'TAG^{commit}'`.
 
 Keep the last working tag accessible to consumers. Never repoint a published tag. Change additive fields within a version only when existing strict readers can still consume the documents. A changed field contract or identifier needs a new schema version or a release with explicit migration instructions and a new consumer pin.

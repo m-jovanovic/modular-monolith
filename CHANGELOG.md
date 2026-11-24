@@ -1,6 +1,12 @@
 # Equipment Library
 
-## First public reference release
+## v1.0.1
+
+The OpenAPI document now describes the actual success statuses, JSON bodies and authorization errors for all 50 operations. A barcode enrollment documents both the created response and the successful retry. A pickup claim documents an empty 204. Feature-local request records have distinct schema identifiers, so clients can discover which fields to send when creating an item, enrolling a copy or reserving it.
+
+Lending now exposes typed application commands for cancellation, collection and loan renewal. The renewal decision reads the clock after PostgreSQL grants the loan lock. A renewal that waited past the due time returns a conflict, and two simultaneous requests from the same borrower can extend an eligible loan only once. The collection test also crosses the pickup deadline while a request waits for its row lock.
+
+## v1.0.0
 
 Run the .NET 11 equipment library with Docker Compose. Race two members for one barcoded copy, follow the winning hold to the librarian's queue, and take the copy through collection, renewal and return. Try the restart exercise to see a durable receipt acknowledged twice and applied once.
 

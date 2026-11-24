@@ -41,6 +41,8 @@ The runtime role has access to `lending`. Each feature states the query it execu
 
 PickupDesk consumes full-state events carrying hold and copy identifiers, barcode and an optional title. Only committed hold transitions appear on this integration stream. Loan renewals and returns change Lending’s own records. The outbox records the W3C trace context when present. [Wire contract and examples](../../reference/contracts/README.md)
 
+The [cancel and collect commands](../../src/Modules/Lending/Application/Holds/CloseHold/CloseHoldCommands.cs) and [renewal command](../../src/Modules/Lending/Application/Loans/RenewLoan/RenewLoanCommand.cs) run their domain decisions against the locked hold or loan. A request may have arrived before the deadline and waited for another transaction. Checking the clock after acquiring the row lock gives it the same deadline as a borrower who arrives at that instant. [PostgreSQL renewal races](../../tests/Modules/Lending/LoanRenewalRaceTests.cs)
+
 [Pickup window, clock and compensation decision](../decisions/expiry-and-compensation.md)
 
 ## Verification
