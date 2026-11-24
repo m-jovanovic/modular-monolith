@@ -28,7 +28,8 @@ if [[ -n "${EQLIB_TEST_PG_CONTAINER:-}" ]]; then
 fi
 
 # Docker assigns a unique ID and keeps the test cluster isolated from any running application.
-cluster=$(docker run --detach --rm --env POSTGRES_PASSWORD=fixture-only postgres:17.12-alpine3.23)
+cluster=$(docker run --detach --rm --env POSTGRES_PASSWORD=fixture-only \
+    --env 'POSTGRES_INITDB_ARGS=--auth-local=scram-sha-256 --auth-host=scram-sha-256' postgres:17.12-alpine3.23)
 cleanup_cluster() {
     result=$?
     if (( result != 0 )); then docker logs --tail 80 "$cluster" >&2; fi
