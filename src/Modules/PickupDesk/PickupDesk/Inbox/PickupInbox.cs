@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text;
 using EquipmentLibrary.Lending.IntegrationEvents;
 using EquipmentLibrary.PickupDesk.Contracts;
@@ -15,7 +14,7 @@ internal sealed class PickupInbox([FromKeyedServices("PickupDesk")] NpgsqlDataSo
     public async Task AcceptAsync(HoldLifecycleEvent message, CancellationToken cancellationToken)
     {
         string payload = Encoding.UTF8.GetString(HoldEventWire.Write(message));
-        await using var insert = database.CreateCommand("""
+        await using NpgsqlCommand insert = database.CreateCommand("""
             INSERT INTO pickup_desk.inbox (subscriber_id, message_id, payload)
             VALUES ($1, $2, $3)
             ON CONFLICT (subscriber_id, message_id) DO NOTHING
@@ -30,7 +29,7 @@ internal sealed class PickupInbox([FromKeyedServices("PickupDesk")] NpgsqlDataSo
         }
 
         // An acknowledgement always refers to the originally accepted fact.
-        await using var compare = database.CreateCommand("""
+        await using NpgsqlCommand compare = database.CreateCommand("""
             SELECT payload = $3 FROM pickup_desk.inbox WHERE subscriber_id = $1 AND message_id = $2
             """);
         compare.Parameters.AddWithValue(Subscriber);
